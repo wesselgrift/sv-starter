@@ -6,7 +6,7 @@
 
 	let { password }: Props = $props();
 
-	const strength = $derived(() => {
+	const strength = $derived.by(() => {
 		if (!password) return 0;
 
 		let score = 0;
@@ -24,14 +24,14 @@
 		return Math.min(score, 5);
 	});
 
-	const strengthLabel = $derived(() => {
+	const strengthLabel = $derived.by(() => {
 		if (strength <= 2) return 'Weak';
 		if (strength <= 3) return 'Fair';
 		if (strength <= 4) return 'Good';
 		return 'Strong';
 	});
 
-	const strengthColor = $derived(() => {
+	const strengthColor = $derived.by(() => {
 		if (strength <= 2) return 'bg-destructive';
 		if (strength <= 3) return 'bg-yellow-500';
 		if (strength <= 4) return 'bg-blue-500';
@@ -52,9 +52,9 @@
 				<div
 					class="h-1 flex-1 rounded-full bg-muted"
 					class:bg-destructive={i < strength && strength <= 2}
-					class:bg-yellow-500={i < strength && strength === 3}
-					class:bg-blue-500={i < strength && strength === 4}
-					class:bg-green-500={i < strength && strength === 5}
+					class:bg-yellow-500={i < strength && strength > 2 && strength <= 3}
+					class:bg-blue-500={i < strength && strength > 3 && strength <= 4}
+					class:bg-green-500={i < strength && strength > 4}
 				></div>
 			{/each}
 		</div>
