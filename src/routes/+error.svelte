@@ -4,7 +4,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '$lib/components/ui/card';
 
-	function nav_back() {
+	function goBack() {
 		if (browser) window.history.back();
 	}
 </script>
@@ -25,7 +25,7 @@
 			{#if page.error?.message}
 				<div class="text-sm text-destructive">{page.error.message}</div>
 			{/if}
-			<Button onclick={nav_back} class="w-full">Go back</Button>
+			<Button onclick={goBack} class="w-full">Go back</Button>
 		</CardContent>
 	</Card>
 </div>

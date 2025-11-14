@@ -8,9 +8,7 @@
 
 	// Sync userProfile store with server data
 	$effect(() => {
-		if (data.userProfile) {
-			userProfileStore.set(data.userProfile);
-		}
+		userProfileStore.set(data.userProfile || null);
 	});
 
 	// Add logged-in class to body

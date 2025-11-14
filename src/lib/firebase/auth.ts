@@ -12,6 +12,7 @@ import {
 import { auth } from './firebase';
 import { goto } from '$app/navigation';
 import { invalidateAll } from '$app/navigation';
+import { userProfile } from '$lib/stores/userStore';
 
 const googleProvider = new GoogleAuthProvider();
 
@@ -81,6 +82,9 @@ export async function logout(redirectTo: string = '/login') {
 
 		// Clear session cookie
 		await fetch('/api/auth/logout', { method: 'POST' });
+
+		// Clear userProfile store
+		userProfile.set(null);
 
 		// Clear localStorage
 		if (typeof window !== 'undefined') {
