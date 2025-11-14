@@ -4,20 +4,21 @@
 	import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '$lib/components/ui/card';
 	import { auth } from '$lib/firebase/firebase';
 	import { sendVerificationEmail, ensureServerSession, logout } from '$lib/firebase/auth';
-	import { goto, invalidateAll } from '$app/navigation';
+	import { goto } from '$app/navigation';
 	import { onAuthStateChanged, type User } from 'firebase/auth';
 
+	// State
 	let user = $state<User | null>(null);
 	let loading = $state(true);
 	let sending = $state(false);
 	let error = $state('');
 
+	// Initialize auth state listener
 	onMount(() => {
 		const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
 			user = currentUser;
 			loading = false;
 
-			// If user is verified, redirect to app
 			if (currentUser?.emailVerified) {
 				handleVerified();
 			}
@@ -26,7 +27,7 @@
 		return unsubscribe;
 	});
 
-	// Poll for email verification every 4 seconds
+	// Poll for email verification status every 4 seconds
 	$effect(() => {
 		if (!user || user.emailVerified) return;
 
@@ -41,10 +42,11 @@
 		return () => clearInterval(interval);
 	});
 
+	// Handlers
 	async function handleVerified() {
 		if (user) {
-			await ensureServerSession(user);
-			await invalidateAll();
+			// Force token refresh to get updated email_verified status
+			await ensureServerSession(user, true);
 			goto('/app');
 		}
 	}

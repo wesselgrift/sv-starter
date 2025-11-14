@@ -93,9 +93,10 @@ export async function logout(redirectTo: string = '/login') {
 	}
 }
 
-export async function ensureServerSession(user: User) {
+export async function ensureServerSession(user: User, forceRefresh = false) {
 	try {
-		const idToken = await user.getIdToken();
+		// Force token refresh if needed (e.g., after email verification to get updated claims)
+		const idToken = await user.getIdToken(forceRefresh);
 
 		const response = await fetch('/api/auth/login', {
 			method: 'POST',
