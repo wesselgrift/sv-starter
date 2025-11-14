@@ -4,28 +4,17 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '$lib/components/ui/card';
 
+    import { Telescope } from '@lucide/svelte';
+
 	function goBack() {
 		if (browser) window.history.back();
 	}
 </script>
 
-<div class="container mx-auto flex min-h-screen items-center justify-center px-4">
-	<Card class="max-w-md">
-		<CardHeader>
-			<CardTitle>Something went wrong</CardTitle>
-			<CardDescription>
-				{#if page.error?.status === 404}
-					The page you're looking for doesn't exist.
-				{:else}
-					An unexpected error occurred.
-				{/if}
-			</CardDescription>
-		</CardHeader>
-		<CardContent class="space-y-4">
-			{#if page.error?.message}
-				<div class="text-sm text-destructive">{page.error.message}</div>
-			{/if}
-			<Button onclick={goBack} class="w-full">Go back</Button>
-		</CardContent>
-	</Card>
+<div class="flex flex-col min-h-screen items-center justify-center p-5">
+    <div class="max-w-2xl flex flex-col items-center justify-center gap-4">
+        <Telescope size="40" strokeWidth="1.3"/>
+        <p class="text-base">Whoops, we couldn't find that page.</p>
+        <Button variant="outline" onclick={goBack}>Go back</Button>
+    </div>
 </div>
