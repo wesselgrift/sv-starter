@@ -38,24 +38,25 @@
 </script>
 
 <form onsubmit={(e) => { e.preventDefault(); handleSubmit(); }} class="space-y-4">
-	<div class="space-y-2">
+	<div class="space-y-2.5">
 		<Label for="email">Email</Label>
 		<Input
 			id="email"
 			type="email"
-			placeholder="you@example.com"
 			bind:value={email}
 			required
 			disabled={loading}
 		/>
 	</div>
 
-	<div class="space-y-2">
-		<Label for="password">Password</Label>
+	<div class="space-y-2.5">
+		<div class="flex flex-row justify-between">
+			<Label for="password">Password</Label>
+			<a href="/reset-password" class="text-sm text-muted-foreground hover:text-foreground">Forgot?</a>
+		</div>
 		<Input
 			id="password"
 			type="password"
-			placeholder="••••••••"
 			bind:value={password}
 			required
 			disabled={loading}
@@ -67,7 +68,7 @@
 	{/if}
 
 	<Button type="submit" class="w-full" disabled={loading}>
-		{loading ? 'Signing in...' : 'Sign in'}
+		{loading ? 'Logging in...' : 'Log in'}
 	</Button>
 </form>
 

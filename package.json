@@ -71,6 +71,7 @@
 	"dependencies": {
 		"firebase": "^12.6.0",
 		"firebase-admin": "^13.6.0",
+		"mode-watcher": "^1.1.0",
 		"vite-plugin-devtools-json": "^1.0.0"
 	}
 }

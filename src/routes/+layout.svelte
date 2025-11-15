@@ -4,6 +4,7 @@
 	import { initializeAuth } from '$lib/firebase/auth';
 	import { loading } from '$lib/stores/userStore';
 	import type { User } from 'firebase/auth';
+    import { ModeWatcher } from "mode-watcher";
 
 	let { children } = $props();
 
@@ -27,5 +28,7 @@
 		};
 	});
 </script>
+
+<ModeWatcher />
 
 {@render children()}

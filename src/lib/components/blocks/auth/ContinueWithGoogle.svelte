@@ -30,6 +30,7 @@
 		onclick={handleGoogleLogin}
 		disabled={loading}
 	>
+        <img src="/google-icon.svg" alt="Google" class="w-5 h-5" />
 		{loading ? 'Signing in...' : 'Continue with Google'}
 	</Button>
 
