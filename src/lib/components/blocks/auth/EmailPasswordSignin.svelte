@@ -38,7 +38,7 @@
 	}
 </script>
 
-<form onsubmit={(e) => { e.preventDefault(); handleSubmit(); }} class="space-y-4">
+<form onsubmit={(e) => { e.preventDefault(); handleSubmit(); }} class="space-y-5">
 	<div class="space-y-2.5">
 		<Label for="email">Email</Label>
 		<Input
@@ -53,7 +53,7 @@
 	<div class="space-y-2.5">
 		<div class="flex flex-row justify-between">
 			<Label for="password">Password</Label>
-			<a href="/reset-password" class="text-sm text-muted-foreground hover:text-foreground">Forgot?</a>
+			<a href="/reset-password" class="text-sm leading-none text-muted-foreground hover:text-foreground">Forgot?</a>
 		</div>
 		<Input
 			id="password"
