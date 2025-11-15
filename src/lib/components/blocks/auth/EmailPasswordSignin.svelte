@@ -68,7 +68,7 @@
 		<div class="text-sm text-destructive">{error}</div>
 	{/if}
 
-	<Button type="submit" class="w-full" disabled={loading}>
+	<Button type="submit" class="w-full -mt-1" disabled={loading}>
 		{#if loading}
 			<Spinner class="size-5" />
 		{/if}
