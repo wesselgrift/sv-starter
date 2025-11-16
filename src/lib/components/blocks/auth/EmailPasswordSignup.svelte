@@ -51,6 +51,8 @@
                     This email is already registered. Try logging in instead.
                 {:else if error === "Firebase: Password should be at least 6 characters (auth/weak-password)."}
                     Your password isn't strong enough.
+                {:else if error === "Firebase: Error (auth/too-many-requests)."}
+                    You've tried too many times. Please try again in 15 minutes.
                 {:else}
                     We ran into an unknown problem. Please try again later.
                 {/if}
