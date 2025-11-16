@@ -1,7 +1,6 @@
 <script lang="ts">
 	import EmailPasswordSignin from '$lib/components/blocks/auth/EmailPasswordSignin.svelte';
 	import ContinueWithGoogle from '$lib/components/blocks/auth/ContinueWithGoogle.svelte';
-	import { loading } from '$lib/stores/userStore';
 	import { Separator } from '$lib/components/ui/separator';
 	import { Logo } from '$lib/components/ui/logo';
 </script>
