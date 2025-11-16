@@ -6,7 +6,7 @@
 </script>
 
 <div class="w-full lg:flex lg:h-screen">
-    <div class="animate-fade-in-zoom flex w-full items-start justify-center lg:w-1/2 lg:items-center">
+    <div class="animate-fade-in-zoom flex w-full items-start justify-center lg:w-1/2 lg:items-center mb-25 lg:mb-0">
         <div class="w-full max-w-md p-5">
             <div class="mb-[80px] lg:mb-10">
                 <Logo class="w-28" />

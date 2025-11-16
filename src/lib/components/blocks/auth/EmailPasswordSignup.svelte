@@ -41,7 +41,7 @@
 	}
 </script>
 
-{#if !error}
+{#if error}
     <Alert variant="destructive">
         <CircleAlert />
         <AlertTitle>Whoops</AlertTitle>
