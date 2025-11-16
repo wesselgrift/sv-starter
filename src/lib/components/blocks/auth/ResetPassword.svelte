@@ -2,8 +2,8 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
+    import { Spinner } from '$lib/components/ui/spinner';
 	import { resetPassword } from '$lib/firebase/auth';
-	import { auth } from '$lib/firebase/firebase';
 
 	let email = $state('');
 	let error = $state('');
@@ -30,31 +30,38 @@
 	}
 </script>
 
-<form onsubmit={(e) => { e.preventDefault(); handleSubmit(); }} class="space-y-4">
-	<div class="space-y-2">
+{#if error}
+    <div class="text-sm text-destructive">{error}</div>
+{/if}
+
+{#if success}
+    <div class="text-sm text-green-600">
+        Password reset email sent! Check your inbox.
+    </div>
+{/if}
+
+<form onsubmit={(e) => { e.preventDefault(); handleSubmit(); }} class="space-y-5">
+	<div class="space-y-2.5">
 		<Label for="email">Email</Label>
 		<Input
 			id="email"
 			type="email"
-			placeholder="you@example.com"
 			bind:value={email}
 			required
 			disabled={loading}
 		/>
+        <p class="block text-left text-sm text-muted-foreground">
+            Fill in your email address and we'll send you a link to reset your password.
+        </p>
 	</div>
 
-	{#if error}
-		<div class="text-sm text-destructive">{error}</div>
-	{/if}
-
-	{#if success}
-		<div class="text-sm text-green-600">
-			Password reset email sent! Check your inbox.
-		</div>
-	{/if}
-
 	<Button type="submit" class="w-full" disabled={loading}>
-		{loading ? 'Sending...' : 'Send reset email'}
+		{#if loading }
+            <Spinner class="size-5" />
+            Sending
+        {:else}
+            Send reset mail
+        {/if}
 	</Button>
 </form>
 

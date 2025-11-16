@@ -3,7 +3,7 @@
 	import ContinueWithGoogle from '$lib/components/blocks/auth/ContinueWithGoogle.svelte';
 	import { loading } from '$lib/stores/userStore';
 	import { Separator } from '$lib/components/ui/separator';
-	import Logo from '$lib/components/ui/logo/logo.svelte';
+	import { Logo } from '$lib/components/ui/logo';
 </script>
 
 
