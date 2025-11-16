@@ -2,7 +2,8 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
-	import { register, ensureServerSession } from '$lib/firebase/auth';
+    import { Spinner } from '$lib/components/ui/spinner'
+	import { register } from '$lib/firebase/auth';
 	import { goto } from '$app/navigation';
 	import PasswordIndicator from './PasswordIndicator.svelte';
 
@@ -37,49 +38,45 @@
 	}
 </script>
 
-<form onsubmit={(e) => { e.preventDefault(); handleSubmit(); }} class="space-y-4">
-	<div class="grid grid-cols-2 gap-4">
-		<div class="space-y-2">
+<form onsubmit={(e) => { e.preventDefault(); handleSubmit(); }} class="space-y-5">
+	<div class="grid grid-cols-2 gap-5">
+		<div class="space-y-2.5">
 			<Label for="firstName">First Name</Label>
 			<Input
 				id="firstName"
 				type="text"
-				placeholder="John"
 				bind:value={firstName}
 				disabled={loading}
 			/>
 		</div>
 
-		<div class="space-y-2">
+		<div class="space-y-2.5">
 			<Label for="lastName">Last Name</Label>
 			<Input
 				id="lastName"
 				type="text"
-				placeholder="Doe"
 				bind:value={lastName}
 				disabled={loading}
 			/>
 		</div>
 	</div>
 
-	<div class="space-y-2">
+	<div class="space-y-2.5">
 		<Label for="email">Email</Label>
 		<Input
 			id="email"
 			type="email"
-			placeholder="you@example.com"
 			bind:value={email}
 			required
 			disabled={loading}
 		/>
 	</div>
 
-	<div class="space-y-2">
+	<div class="space-y-2.5">
 		<Label for="password">Password</Label>
 		<Input
 			id="password"
 			type="password"
-			placeholder="••••••••"
 			bind:value={password}
 			required
 			disabled={loading}
@@ -91,8 +88,10 @@
 		<div class="text-sm text-destructive">{error}</div>
 	{/if}
 
-	<Button type="submit" class="w-full" disabled={loading}>
-		{loading ? 'Creating account...' : 'Create account'}
+	<Button type="submit" class="w-full -mt-1" disabled={loading}>
+		{#if loading}
+			<Spinner class="size-5" />
+		{/if}
+        Create account
 	</Button>
 </form>
-

@@ -38,6 +38,13 @@
 		return 'bg-green-500';
 	});
 
+    const strengthTextColor = $derived.by(() => {
+        if (strength <= 2) return 'text-destructive';
+		if (strength <= 3) return 'text-yellow-500';
+		if (strength <= 4) return 'text-lime-500';
+		return 'text-green-500';
+    });
+
 	const getBarClass = (index: number) => {
 		if (index >= strength) return 'bg-muted';
 		if (strength <= 2) return 'bg-destructive';
@@ -48,18 +55,24 @@
 </script>
 
 {#if password}
-	<div class="space-y-1">
-		<div class="flex items-center justify-between text-xs">
-			<span>Password strength</span>
-			<span class={strengthColor === 'bg-destructive' ? 'text-destructive' : ''}>
-				{strengthLabel}
-			</span>
-		</div>
-		<div class="flex gap-1">
-			{#each Array(5) as _, i}
-				<div class="h-1 flex-1 rounded-full {getBarClass(i)}"></div>
+	<div class="space-y-1.5 h-12">
+        <div class="flex gap-1">
+            {#each Array(5) as _, i}
+                <div class="h-1 flex-1 rounded-full {getBarClass(i)}"></div>
 			{/each}
 		</div>
+        <div class="flex items-center justify-between text-sm">
+            <span class={strengthTextColor}>
+                {strengthLabel} password
+            </span>
+        </div>
 	</div>
+{:else}
+
+    <p class="bloc h-12 text-left text-sm text-muted-foreground/80">
+        Use a password with at least 8 characters, 1 uppercase letter, 1 lowercase letter, 1 number
+        and 1 special character.
+    </p>
+
 {/if}
 
