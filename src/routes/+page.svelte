@@ -15,10 +15,10 @@
 		</div>
 
 		<div class="flex flex-col gap-4 sm:flex-row sm:justify-center">
-			<Button asChild size="lg">
+			<Button size="lg">
 				<a href="/account">Get started</a>
 			</Button>
-			<Button asChild variant="outline" size="lg">
+			<Button variant="outline" size="lg">
 				<a href="/login">Sign in</a>
 			</Button>
 		</div>
