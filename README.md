@@ -1,13 +1,13 @@
 # SV Starter
 
-An opinionated SvelteKit 2 + Svelte 5 starter for building Firebase-authenticated SaaS dashboards. It ships with production-ready auth flows, a shadcn-svelte inspired UI kit, Tailwind CSS v4 tokens, and a server-side session story that keeps SvelteKit locals in sync with Firebase.
+An opinionated SvelteKit 2 + Svelte 5 starter for building Firebase-authenticated apps. It ships with production-ready auth flows, a shadcn-svelte UI kit, Tailwind CSS v4 tokens, and a server-side session that keeps SvelteKit locals in sync with Firebase.
 
 ## Highlights
 
 - Full email/password + Google authentication with signup, login, password reset, and email verification screens.
 - Secure Firebase session cookies managed via `/api/auth/login` & `/api/auth/logout`, wired into `src/hooks.server.ts` for route protection.
 - Firestore-backed `users/{uid}` profiles that hydrate the `userProfile` store for use across `src/routes/app`.
-- Batteries-included UI primitives under `src/lib/components/ui` (Button, Card, Alert, etc.) generated via shadcn-svelte & Bits UI, plus higher-level auth blocks under `src/lib/components/blocks/auth`.
+- Styled with ShadCN-Svelte UI components, installed in `lib/components/ui`. Intall whatever you need from ShadCN-Svelte.
 - Tailwind CSS v4 theme tokens and animation utilities defined in `src/app.css`, with a ready-to-brand palette and dark-mode defaults.
 - Tooling for linting, formatting, type-checking, and packaging (`svelte-package`) should you choose to publish the components in `src/lib`.
 
@@ -19,7 +19,7 @@ An opinionated SvelteKit 2 + Svelte 5 starter for building Firebase-authenticate
 | Styling | Tailwind CSS v4, `tw-animate-css`, shadcn-svelte tokens via `components.json` |
 | Auth & Data | Firebase Web SDK (client) + Firebase Admin & Firestore (server) |
 | State | Svelte stores (`src/lib/stores/userStore.ts`) for sharing auth/profile data |
-| UI | shadcn-svelte compatible components (Button, Card, Alert, etc.) + Bits UI primitives |
+| UI | shadcn-svelte components |
 | Tooling | Vite 7, TypeScript 5.9, ESLint 9, Prettier 3, `svelte-package` + `publint` |
 
 ## Quick start
@@ -139,9 +139,10 @@ All non-public routes are protected in `src/hooks.server.ts`, which verifies the
 
 ### UI system
 
+- [ShadCN for Svelte](https://www.shadcn-svelte.com/) as a flexible UI system
 - `components.json` is preconfigured for shadcn-svelte CLI commands (aliases align with `$lib/components/ui`).
-- Base tokens and typography live in `src/app.css`. Update CSS variables there to rebrand.
-- Ready-made auth blocks under `src/lib/components/blocks/auth` encapsulate form logic, validation states, and loading experiences. Reuse them elsewhere or use as references when building new flows.
+- Base tokens live in `src/app.css`. Update CSS variables there to rebrand.
+- Ready-made auth blocks under `src/lib/components/blocks/auth` encapsulate form logic, validation states, and loading experiences.
 
 ### Utilities & stores
 
@@ -153,13 +154,7 @@ All non-public routes are protected in `src/hooks.server.ts`, which verifies the
 
 - **Add more pages** under `src/routes/app/...`; the `+layout` already provides auth context.
 - **Add shadcn-svelte components** with `npx shadcn-svelte@latest add <component>` (respects `components.json` aliases).
-- **Ship your UI kit** by exporting components via `src/lib/index.ts` and running `npm run prepack`.
-- **Integrate additional providers** by wiring new Firebase OAuth providers into `src/lib/firebase/auth.ts` and extending the existing button patterns.
 
 ## Deployment
 
 The project currently uses `@sveltejs/adapter-auto`. Choose an adapter that matches your hosting target (`adapter-node`, `adapter-vercel`, `adapter-cloudflare`, etc.) before deploying. Ensure `FIREBASE_PRIVATE_KEY` and the other secrets are configured in your hosting environment, and that cookies remain HTTPS-only in production.
-
----
-
-Questions, ideas, or missing context? Open an issue or ping the maintainer so the next dev has an even smoother onboarding experience.
