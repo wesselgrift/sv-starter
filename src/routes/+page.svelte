@@ -15,11 +15,11 @@
 		</div>
 
 		<div class="flex flex-col gap-4 sm:flex-row sm:justify-center">
-			<Button size="lg">
-				<a href="/account">Get started</a>
+			<Button href="/account" size="lg">
+				Get started
 			</Button>
-			<Button variant="outline" size="lg">
-				<a href="/login">Sign in</a>
+			<Button href="/login" variant="outline" size="lg">
+				Sign in
 			</Button>
 		</div>
 
