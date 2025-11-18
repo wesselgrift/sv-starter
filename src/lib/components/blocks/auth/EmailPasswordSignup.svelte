@@ -5,7 +5,7 @@
 	import { Label } from '$lib/components/ui/label';
 	import { Spinner } from '$lib/components/ui/spinner';
 	import { Alert, AlertDescription, AlertTitle } from "$lib/components/ui/alert";
-	import { CircleAlert } from '@lucide/svelte';
+	import { CircleAlert, Eye, EyeOff } from '@lucide/svelte';
 
 	// Auth and navigation
 	import { register } from '$lib/firebase/auth';
@@ -19,6 +19,7 @@
 	let lastName = $state('');
 	let error = $state('');
 	let loading = $state(false);
+	let showPassword = $state(false);
 
 	// Handles form submission and user registration
 	async function handleSubmit() {
@@ -106,13 +107,31 @@
 	<!-- Password input with strength indicator -->
 	<div class="space-y-2.5">
 		<Label for="password">Password</Label>
-		<Input
-			id="password"
-			type="password"
-			bind:value={password}
-			required
-			disabled={loading}
-		/>
+		<div class="relative">
+			<Input
+				id="password"
+				type={showPassword ? 'text' : 'password'}
+				bind:value={password}
+				required
+				disabled={loading}
+				class="pr-10"
+			/>
+			<Button
+				type="button"
+				variant="ghost"
+				size="icon-sm"
+				class="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 rounded-sm text-muted-foreground"
+				onclick={() => (showPassword = !showPassword)}
+				disabled={loading}
+				aria-label={showPassword ? 'Hide password' : 'Show password'}
+			>
+				{#if showPassword}
+					<EyeOff class="size-4" strokeWidth={2.1} />
+				{:else}
+					<Eye class="size-4" strokeWidth={2.1} />
+				{/if}
+			</Button>
+		</div>
 		<PasswordIndicator {password} />
 	</div>
 
