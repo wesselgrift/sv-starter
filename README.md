@@ -64,9 +64,7 @@ Never commit `.env`. Use secrets in CI/CD.
 3. **Configure custom password reset URL** (*Authentication → Templates → Password reset*):
    - Click on the **Password reset** email template
    - Scroll down and click **Customize action URL**
-   - Enter your custom URL:
-     - Development: `http://localhost:5173/auth-action`
-     - Production: `https://yourdomain.com/auth-action`
+   - Enter your custom action URL: `http://localhost:5173/auth-action`
    - Save the changes
    - **Note**: Without this configuration, password reset emails will redirect to Firebase's default handler page instead of your custom page
 4. Create Firestore database (*Native* mode). Stores `users/{uid}` with `{ uid, email, firstName, lastName, emailVerified, createdAt, updatedAt }`
