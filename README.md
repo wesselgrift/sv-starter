@@ -61,9 +61,17 @@ Never commit `.env`. Use secrets in CI/CD.
 2. Enable auth providers (*Build → Authentication*):
    - Email/Password
    - Google (authorize `http://localhost:5173` and production domains)
-3. Create Firestore database (*Native* mode). Stores `users/{uid}` with `{ uid, email, firstName, lastName, emailVerified, createdAt, updatedAt }`
-4. Generate service account (*Project settings → Service accounts → Generate new private key*), copy to `.env`
-5. **(Optional)** Harden Firestore rules:
+3. **Configure custom password reset URL** (*Authentication → Templates → Password reset*):
+   - Click on the **Password reset** email template
+   - Scroll down and click **Customize action URL**
+   - Enter your custom URL:
+     - Development: `http://localhost:5173/set-new-password`
+     - Production: `https://yourdomain.com/set-new-password`
+   - Save the changes
+   - **Note**: Without this configuration, password reset emails will redirect to Firebase's default handler page instead of your custom page
+4. Create Firestore database (*Native* mode). Stores `users/{uid}` with `{ uid, email, firstName, lastName, emailVerified, createdAt, updatedAt }`
+5. Generate service account (*Project settings → Service accounts → Generate new private key*), copy to `.env`
+6. **(Optional)** Harden Firestore rules:
    ```
    rules_version = '2';
    service cloud.firestore {
@@ -99,6 +107,7 @@ Export modules from `src/lib/index.ts` before `prepack` if publishing.
 | `/account` | Sign-up (email/password + Google) |
 | `/login` | Login (email/password + Google + reset) |
 | `/reset-password` | Request password reset |
+| `/set-new-password` | Set new password (from email link) |
 | `/verify-email` | Email verification polling |
 | `/app` | Protected area (shows `userProfile`, sign-out) |
 | `/api/auth/login` | Exchange ID token for session cookie + seed Firestore |

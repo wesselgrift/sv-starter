@@ -6,7 +6,11 @@ import { redirect, isRedirect } from '@sveltejs/kit';
 import type { Handle } from '@sveltejs/kit';
 
 // Routes that don't require authentication
-const publicRoutes = ['/', '/login', '/account', '/reset-password'];
+const publicRoutes = ['/', '/login', '/account', '/reset-password', '/set-new-password'];
+
+// Routes that should be accessible even when authenticated (special cases)
+// Note: /set-new-password is handled separately with oobCode validation
+const alwaysAccessibleRoutes: string[] = [];
 
 // Server hook that runs on every request to handle authentication and route protection
 export const handle: Handle = async ({ event, resolve }) => {
@@ -36,8 +40,32 @@ export const handle: Handle = async ({ event, resolve }) => {
 			// Attach user data to event locals for use in load functions and pages
 			event.locals.user = decodedClaims;
 
+			// Special handling for /set-new-password: only allow authenticated users if they have a valid reset link
+			if (event.url.pathname === '/set-new-password') {
+				const oobCode = event.url.searchParams.get('oobCode');
+				const mode = event.url.searchParams.get('mode');
+				
+				// If authenticated user visits without valid reset parameters, redirect them
+				if (!oobCode || !mode || mode !== 'resetPassword') {
+					console.log('[AUTH] Authenticated user accessing /set-new-password without valid reset link, redirecting to /app');
+					throw redirect(302, '/app');
+				}
+				// If they have valid parameters, allow access (they might be authenticated but clicked a reset link)
+				console.log('[AUTH] Allowing access to /set-new-password with valid reset parameters');
+				return resolve(event);
+			}
+
+			// Redirect authenticated users away from /reset-password (they should use account settings)
+			if (event.url.pathname === '/reset-password') {
+				console.log('[AUTH] Authenticated user accessing /reset-password, redirecting to /app');
+				throw redirect(302, '/app');
+			}
+
 			// Redirect verified users away from public routes to the app
-			if (decodedClaims.email_verified && publicRoutes.includes(event.url.pathname)) {
+			// Exception: allow access to alwaysAccessibleRoutes (e.g., password reset with valid token)
+			if (decodedClaims.email_verified && 
+			    publicRoutes.includes(event.url.pathname) && 
+			    !alwaysAccessibleRoutes.includes(event.url.pathname)) {
 				console.log('[AUTH] Email verified user on public route, redirecting to /app');
 				throw redirect(302, '/app');
 			}

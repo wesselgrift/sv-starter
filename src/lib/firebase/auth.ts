@@ -126,7 +126,18 @@ export async function sendVerificationEmail(user: User) {
 // Sends password reset email to the provided email address
 export async function resetPassword(email: string) {
 	try {
-		await sendPasswordResetEmail(auth, email);
+		// Get the base URL for the custom action handler
+		const baseUrl =
+			typeof window !== 'undefined'
+				? window.location.origin
+				: import.meta.env.VITE_APP_URL || 'http://localhost:5173';
+		
+		const actionCodeSettings = {
+			url: `${baseUrl}/set-new-password`,
+			handleCodeInApp: true
+		};
+
+		await sendPasswordResetEmail(auth, email, actionCodeSettings);
 		return { error: null };
 	} catch (error: any) {
 		return { error: error.message };
