@@ -445,33 +445,6 @@
 		</Alert>
 	{/if}
 
-	<!-- Google Sign-in Alert (Situations A, C, D, E, F) -->
-	{#if hasGoogleProvider}
-        <div class="flex items-start justify-start gap-3 border rounded-lg p-4 bg-card">
-            <img src="/google-icon.svg" alt="Google" class="size-4" />
-            <div class="flex flex-col gap-1.5 items-start">
-                <span class="text-sm font-medium  leading-tight">Google</span>
-                <span class="text-sm text-muted-foreground">You have connected your Google account.</span>
-                <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onclick={handleDisconnectGoogle}
-                    disabled={loading || disconnectingGoogle || !!successMessage || !canDisconnectGoogle}
-                >
-                    {#if disconnectingGoogle}
-                        <Spinner class="size-4" />
-                    {/if}
-                    Disconnect
-                </Button>
-                {#if !canDisconnectGoogle}
-                    <p class="text-sm text-muted-foreground">
-                        Please set a password first before disconnecting Google.
-                    </p>
-                {/if}
-            </div>
-        </div>
-	{/if}
 
 	<!-- Email Section -->
 	<div class="space-y-2">
@@ -700,24 +673,53 @@
 		</div>
 	{/if}
 
-	<!-- Connect Google Button - Show for email/password only users -->
-	{#if hasEmailPasswordProvider && !hasGoogleProvider}
-		<div class="space-y-2">
-			<Label>Google Account</Label>
-			<Button
-				type="button"
-				variant="outline"
-				size="sm"
-				onclick={handleConnectGoogle}
-				disabled={loading || connectingGoogle || !!successMessage}
-			>
-				{#if connectingGoogle}
-					<Spinner class="size-4" />
-				{:else}
-					<img src="/google-icon.svg" alt="Google" class="size-4" />
-				{/if}
-				Connect Google
-			</Button>
-		</div>
-	{/if}
+    <!-- Google Sign-in Alert (Situations A, C, D, E, F) -->
+	{#if hasGoogleProvider}
+        <div class="flex items-start justify-start gap-3 border rounded-lg p-4 bg-card">
+            <img src="/google-icon.svg" alt="Google" class="size-4" />
+            <div class="flex flex-col gap-1.5 items-start">
+                <span class="text-sm font-medium  leading-tight">Google</span>
+                <span class="text-sm text-muted-foreground pb-2">You have connected your Google account.</span>
+                <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onclick={handleDisconnectGoogle}
+                    disabled={loading || disconnectingGoogle || !!successMessage || !canDisconnectGoogle}
+                >
+                    {#if disconnectingGoogle}
+                        <Spinner class="size-4" />
+                    {/if}
+                    Disconnect
+                </Button>
+                {#if !canDisconnectGoogle}
+                    <p class="text-sm text-muted-foreground">
+                        Please set a password first before disconnecting Google.
+                    </p>
+                {/if}
+            </div>
+        </div>
+    {/if}
+
+    <!-- Connect Google Button - Show for email/password only users -->
+    {#if hasEmailPasswordProvider && !hasGoogleProvider}
+        <div class="space-y-2">
+            <Label>Google Account</Label>
+            <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onclick={handleConnectGoogle}
+                disabled={loading || connectingGoogle || !!successMessage}
+            >
+                {#if connectingGoogle}
+                    <Spinner class="size-4" />
+                {:else}
+                    <img src="/google-icon.svg" alt="Google" class="size-4" />
+                {/if}
+                Connect Google
+            </Button>
+        </div>
+    {/if}
+
 </div>
