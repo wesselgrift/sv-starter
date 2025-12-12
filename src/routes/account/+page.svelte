@@ -1,7 +1,7 @@
 <script lang="ts">
 	// Auth components for signup functionality
-	import EmailPasswordSignup from '$lib/components/blocks/auth/EmailPasswordSignup.svelte';
-	import ContinueWithGoogle from '$lib/components/blocks/auth/ContinueWithGoogle.svelte';
+    import { EmailPasswordSignup, ContinueWithGoogle } from '$lib/components/blocks/auth';
+    
 	// UI components
 	import { Separator } from '$lib/components/ui/separator';
 	import { Logo } from '$lib/components/ui/logo';

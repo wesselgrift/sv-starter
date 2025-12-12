@@ -1,6 +1,6 @@
 <script lang="ts">
 	// Component imports
-	import VerifyEmailChangeAction from '$lib/components/blocks/auth/VerifyEmailChangeAction.svelte';
+	import { VerifyEmailChangeAction } from '$lib/components/blocks/auth';
 	import { Logo } from '$lib/components/ui/logo';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';

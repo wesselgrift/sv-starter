@@ -10,7 +10,7 @@
 	// Auth and navigation
 	import { register } from '$lib/firebase/auth';
 	import { goto } from '$app/navigation';
-	import PasswordIndicator from './PasswordIndicator.svelte';
+	import { PasswordIndicator } from '$lib/components/blocks/auth';
 
 	// Form state
 	let email = $state('');

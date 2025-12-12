@@ -1,6 +1,6 @@
 <script lang="ts">
 	// Component imports
-	import SetNewPassword from '$lib/components/blocks/auth/SetNewPassword.svelte';
+	import { SetNewPassword } from '$lib/components/blocks/auth';
 	import { Logo } from '$lib/components/ui/logo';
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';

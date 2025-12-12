@@ -1,6 +1,6 @@
 <script lang="ts">
 	// Component imports
-	import ResetPassword from '$lib/components/blocks/auth/ResetPassword.svelte';
+	import { ResetPassword } from '$lib/components/blocks/auth';
 	import { Logo } from '$lib/components/ui/logo'
 </script>
 
