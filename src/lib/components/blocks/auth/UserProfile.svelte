@@ -9,6 +9,9 @@
 	import { Alert, AlertDescription, AlertTitle } from '$lib/components/ui/alert';
 	import { Spinner } from '$lib/components/ui/spinner';
 
+	// Svelte transitions
+	import { fly } from 'svelte/transition';
+
 	// Icons
 	import { DoorOpen, CircleAlert, CircleCheck, IdCardLanyard, MailIcon, RectangleEllipsisIcon } from '@lucide/svelte';
 
@@ -45,6 +48,30 @@
 	let currentUser = $state<User | null>(null);
 	let disconnectingGoogle = $state(false);
 	let connectingGoogle = $state(false);
+	let alertTimeout: ReturnType<typeof setTimeout> | null = null;
+
+	// Auto-dismiss alerts after 4 seconds
+	function showAlert(type: 'success' | 'error', message: string) {
+		// Clear any existing timeout
+		if (alertTimeout) {
+			clearTimeout(alertTimeout);
+		}
+
+		if (type === 'success') {
+			error = '';
+			successMessage = message;
+		} else {
+			successMessage = '';
+			error = message;
+		}
+
+		// Auto-dismiss after 4 seconds
+		alertTimeout = setTimeout(() => {
+			successMessage = '';
+			error = '';
+			alertTimeout = null;
+		}, 2500);
+	}
 
 	// Track current Firebase auth user
 	$effect(() => {
@@ -54,6 +81,17 @@
 
 		return () => unsubscribe();
 	});
+
+	// Force refresh current user state to trigger reactivity
+	async function refreshCurrentUser() {
+		const user = auth.currentUser;
+		if (user) {
+			await user.reload();
+			// Force reactivity by setting to null first, then to the refreshed user
+			currentUser = null;
+			currentUser = auth.currentUser;
+		}
+	}
 
 	// Provider detection
 	const hasGoogleProvider = $derived(
@@ -100,17 +138,18 @@
 		try {
 			const result = await linkGoogleProvider();
 			if (result.error) {
-				error = result.error;
-				connectingGoogle = false;
+				showAlert('error', result.error);
 				return;
 			}
 
 			// Refresh the page data
 			await invalidateAll();
-			successMessage = 'Google account connected successfully';
-			connectingGoogle = false;
+			showAlert('success', 'Google account connected successfully');
 		} catch (err: any) {
-			error = err.message || 'Failed to connect Google account';
+			showAlert('error', err.message || 'Failed to connect Google account');
+		} finally {
+			// Refresh user state to update provider info in UI
+			await refreshCurrentUser();
 			connectingGoogle = false;
 		}
 	}
@@ -124,17 +163,18 @@
 		try {
 			const result = await unlinkGoogleProvider();
 			if (result.error) {
-				error = result.error;
-				disconnectingGoogle = false;
+				showAlert('error', result.error);
 				return;
 			}
 
 			// Refresh the page data
 			await invalidateAll();
-			successMessage = 'Google account disconnected successfully';
-			disconnectingGoogle = false;
+			showAlert('success', 'Google account disconnected successfully');
 		} catch (err: any) {
-			error = err.message || 'Failed to disconnect Google account';
+			showAlert('error', err.message || 'Failed to disconnect Google account');
+		} finally {
+			// Refresh user state to update provider info in UI
+			await refreshCurrentUser();
 			disconnectingGoogle = false;
 		}
 	}
@@ -166,7 +206,7 @@
 
 		// Validate inputs
 		if (!trimmedFirstName || !trimmedLastName) {
-			error = 'First name and last name are required';
+			showAlert('error', 'First name and last name are required');
 			return;
 		}
 
@@ -198,20 +238,20 @@
 			const data = await response.json();
 
 			if (!response.ok) {
-				error = data.error || 'Failed to update name';
+				showAlert('error', data.error || 'Failed to update name');
 				savingName = false;
 				return;
 			}
 
 			// Refresh the page data to get updated profile
 			await invalidateAll();
-			successMessage = 'Name updated successfully';
+			showAlert('success', 'Name updated successfully');
 			editingName = false;
 			newFirstName = '';
 			newLastName = '';
 			savingName = false;
 		} catch (err: any) {
-			error = err.message || 'An error occurred';
+			showAlert('error', err.message || 'An error occurred');
 			savingName = false;
 		}
 	}
@@ -506,23 +546,28 @@
 			loading = false;
 		}
 	}
+
 </script>
 
 {#if error}
-    <Alert variant="destructive" class="mb-4">
-        <CircleAlert />
-        <AlertTitle>Error</AlertTitle>
-        <AlertDescription>{error}</AlertDescription>
-    </Alert>
+    <div transition:fly={{ y: 20, duration: 300 }}>
+        <Alert variant="destructive" class="mb-4">
+            <CircleAlert />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+        </Alert>
+    </div>
 {/if}
 
 <!-- Success Alert -->
 {#if successMessage}
-    <Alert class="text-green-700 dark:text-green-500 mb-4">
-        <CircleCheck />
-        <AlertTitle>Success</AlertTitle>
-        <AlertDescription>{successMessage}</AlertDescription>
-    </Alert>
+    <div transition:fly={{ y: 20, duration: 300 }}>
+        <Alert class="text-green-700 dark:text-green-500 mb-4">
+            <CircleCheck />
+            <AlertTitle>Success</AlertTitle>
+            <AlertDescription>{successMessage}</AlertDescription>
+        </Alert>
+    </div>
 {/if}
 
 <div class="flex flex-col border border-border rounded-lg bg-card">
