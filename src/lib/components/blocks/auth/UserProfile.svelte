@@ -27,6 +27,7 @@
 
 
 	// State management
+    let editingName = $state(false);
 	let editingEmail = $state(false);
 	let editingPassword = $state(false);
 	let settingPassword = $state(false);
@@ -448,13 +449,29 @@
     {/if}
 
     <!-- Name container -->
-    <div class="flex flex-row items-start gap-4 border-border border-b p-4">
-        <IdCardLanyard strokeWidth={1.5} />
-        <div class="flex flex-col gap-1">
-            <span class="text-sm font-medium">Name</span>
-            <span class="text-sm text-muted-foreground">{$userProfile?.firstName ?? 'N/A'} {$userProfile?.lastName ?? 'N/A'}</span>
+    <div class="flex flex-col border-border border-b p-4">
+
+        <!-- Name / display row & edit button -->
+        <div class="flex flex-row justify-between items-start">
+            <div class="flex flex-row items-start gap-4">
+                <IdCardLanyard strokeWidth={1.5} />
+                <div class="flex flex-col gap-1">
+                    <span class="text-sm font-medium">Name</span>
+                    <span class="text-sm text-muted-foreground">{$userProfile?.firstName ?? 'N/A'} {$userProfile?.lastName ?? 'N/A'}</span>
+                </div>
+            </div>
+            <!-- This button should trigger the editing mode for the name. -->
+            <Button class="ml-auto" variant="outline" size="sm">Change name</Button>
         </div>
-        <Button class="ml-auto" variant="outline" size="sm">Change name</Button>
+
+        <!-- Name / edit row (only visible when editting) -->
+         {#if editingName}
+            <div class="space-y-3 pl-10 py-4 max-w-md">
+                <div class="space-y-2">
+                    <!-- Edit name fields here, including save button and cancel button. -->
+                </div>
+            </div>
+         {/if}
     </div>
 
     <!-- Email container -->
@@ -481,7 +498,6 @@
                     size="sm"
                     onclick={handleEditEmail}
                     disabled={loading || !!successMessage || editingEmail || !canEditEmail}
-                    class="ml-auto"
                 >
                     Change email
                 </Button>
