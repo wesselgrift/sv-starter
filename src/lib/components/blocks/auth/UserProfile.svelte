@@ -27,7 +27,10 @@
 
 
 	// State management
-    let editingName = $state(false);
+	let editingName = $state(false);
+	let newFirstName = $state('');
+	let newLastName = $state('');
+	let savingName = $state(false);
 	let editingEmail = $state(false);
 	let editingPassword = $state(false);
 	let settingPassword = $state(false);
@@ -133,6 +136,83 @@
 		} catch (err: any) {
 			error = err.message || 'Failed to disconnect Google account';
 			disconnectingGoogle = false;
+		}
+	}
+
+	// Enter name edit mode
+	function handleEditName() {
+		editingName = true;
+		newFirstName = $userProfile?.firstName ?? '';
+		newLastName = $userProfile?.lastName ?? '';
+		error = '';
+		successMessage = '';
+	}
+
+	// Cancel name edit
+	function handleCancelName() {
+		editingName = false;
+		newFirstName = '';
+		newLastName = '';
+		error = '';
+	}
+
+	// Save name changes
+	async function handleSaveName() {
+		error = '';
+		successMessage = '';
+
+		const trimmedFirstName = newFirstName.trim();
+		const trimmedLastName = newLastName.trim();
+
+		// Validate inputs
+		if (!trimmedFirstName || !trimmedLastName) {
+			error = 'First name and last name are required';
+			return;
+		}
+
+		// Check if values are the same as current
+		if (
+			trimmedFirstName === ($userProfile?.firstName ?? '') &&
+			trimmedLastName === ($userProfile?.lastName ?? '')
+		) {
+			editingName = false;
+			newFirstName = '';
+			newLastName = '';
+			return;
+		}
+
+		savingName = true;
+
+		try {
+			const response = await fetch('/api/auth/update-profile', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					firstName: trimmedFirstName,
+					lastName: trimmedLastName
+				})
+			});
+
+			const data = await response.json();
+
+			if (!response.ok) {
+				error = data.error || 'Failed to update name';
+				savingName = false;
+				return;
+			}
+
+			// Refresh the page data to get updated profile
+			await invalidateAll();
+			successMessage = 'Name updated successfully';
+			editingName = false;
+			newFirstName = '';
+			newLastName = '';
+			savingName = false;
+		} catch (err: any) {
+			error = err.message || 'An error occurred';
+			savingName = false;
 		}
 	}
 
@@ -460,18 +540,66 @@
                     <span class="text-sm text-muted-foreground">{$userProfile?.firstName ?? 'N/A'} {$userProfile?.lastName ?? 'N/A'}</span>
                 </div>
             </div>
-            <!-- This button should trigger the editing mode for the name. -->
-            <Button class="ml-auto" variant="outline" size="sm">Change name</Button>
+            <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onclick={handleEditName}
+                disabled={savingName || !!successMessage || editingName}
+                class="ml-auto"
+            >
+                Change name
+            </Button>
         </div>
 
-        <!-- Name / edit row (only visible when editting) -->
-         {#if editingName}
+        <!-- Name / edit row (only visible when editing) -->
+        {#if editingName}
             <div class="space-y-3 pl-10 py-4 max-w-md">
                 <div class="space-y-2">
-                    <!-- Edit name fields here, including save button and cancel button. -->
+                    <Label for="newFirstName">First Name</Label>
+                    <Input
+                        id="newFirstName"
+                        type="text"
+                        bind:value={newFirstName}
+                        disabled={savingName}
+                        placeholder="Enter first name"
+                    />
+                </div>
+                <div class="space-y-2">
+                    <Label for="newLastName">Last Name</Label>
+                    <Input
+                        id="newLastName"
+                        type="text"
+                        bind:value={newLastName}
+                        disabled={savingName}
+                        placeholder="Enter last name"
+                    />
+                </div>
+                <div class="flex gap-2">
+                    <Button
+                        type="button"
+                        variant="default"
+                        size="sm"
+                        onclick={handleSaveName}
+                        disabled={savingName}
+                    >
+                        {#if savingName}
+                            <Spinner class="size-4" />
+                        {/if}
+                        Save
+                    </Button>
+                    <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onclick={handleCancelName}
+                        disabled={savingName}
+                    >
+                        Cancel
+                    </Button>
                 </div>
             </div>
-         {/if}
+        {/if}
     </div>
 
     <!-- Email container -->
