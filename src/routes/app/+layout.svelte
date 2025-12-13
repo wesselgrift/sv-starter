@@ -30,7 +30,7 @@
 </script>
 
 <!-- Render child route content -->
-<div class="flex flex-col p-8">
+<div class="flex flex-col p-3 lg:p-8">
     {@render children()}
 </div>
 
