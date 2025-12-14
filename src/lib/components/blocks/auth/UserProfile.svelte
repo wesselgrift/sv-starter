@@ -8,15 +8,16 @@
 	import { Label } from '$lib/components/ui/label';
 	import { Alert, AlertDescription, AlertTitle } from '$lib/components/ui/alert';
 	import { Spinner } from '$lib/components/ui/spinner';
+	import * as AlertDialog from '$lib/components/ui/alert-dialog/index.js';
 
 	// Svelte transitions
 	import { fly } from 'svelte/transition';
 
 	// Icons
-	import { DoorOpen, CircleAlert, CircleCheck, IdCardLanyard, MailIcon, RectangleEllipsisIcon } from '@lucide/svelte';
+	import { DoorOpen, CircleAlert, CircleCheck, IdCardLanyard, MailIcon, RectangleEllipsisIcon, Trash2 } from '@lucide/svelte';
 
 	// Firebase auth
-	import { logout, linkGoogleProvider, unlinkGoogleProvider } from '$lib/firebase/auth';
+	import { logout, linkGoogleProvider, unlinkGoogleProvider, deleteAccount } from '$lib/firebase/auth';
 	import {
 		signInWithEmailAndPassword,
 		onAuthStateChanged,
@@ -48,6 +49,8 @@
 	let currentUser = $state<User | null>(null);
 	let disconnectingGoogle = $state(false);
 	let connectingGoogle = $state(false);
+	let deleteDialogOpen = $state(false);
+	let deletingAccount = $state(false);
 	let alertTimeout: ReturnType<typeof setTimeout> | null = null;
 
 	// Auto-dismiss alerts after 4 seconds
@@ -71,6 +74,17 @@
 			error = '';
 			alertTimeout = null;
 		}, 2500);
+	}
+
+	// Handle account deletion with confirmation
+	async function handleDeleteAccount() {
+		deletingAccount = true;
+		const result = await deleteAccount();
+		if (result.error) {
+			showAlert('error', result.error);
+			deletingAccount = false;
+			deleteDialogOpen = false;
+		}
 	}
 
 	// Track current Firebase auth user
@@ -570,7 +584,7 @@
     </div>
 {/if}
 
-<div class="flex flex-col border border-border rounded-lg bg-card">
+<div class="flex flex-col border border-border rounded-lg bg-card overflow-hidden mb-8">
 
     <!-- Name container -->
     <div class="flex flex-col border-border border-b p-4">
@@ -578,7 +592,7 @@
         <!-- Name / display row & edit button -->
         <div class="flex flex-row justify-between items-start">
             <div class="flex flex-row items-start gap-4">
-                <IdCardLanyard strokeWidth={1.5} />
+                <IdCardLanyard class="shrink-0" strokeWidth={1.5} />
                 <div class="flex flex-col gap-1">
                     <span class="text-sm font-medium">Name</span>
                     <span class="text-sm text-muted-foreground">{$userProfile?.firstName ?? 'N/A'} {$userProfile?.lastName ?? 'N/A'}</span>
@@ -652,7 +666,7 @@
         <!-- Email / display row & edit button -->
         <div class="flex flex-row justify-between items-start">
             <div class="flex flex-row items-start gap-4">
-                <MailIcon strokeWidth={1.5} />
+                <MailIcon class="shrink-0" strokeWidth={1.5} />
                 <div class="flex flex-col gap-1">
                     <span class="text-sm font-medium">Email</span>
                     <span class="text-sm text-muted-foreground">{displayEmail}</span>
@@ -732,7 +746,7 @@
         <!-- Password / display row & edit button -->
         <div class="flex flex-row justify-between">
             <div class="flex flex-row items-start gap-4">
-                <RectangleEllipsisIcon strokeWidth={1.5} />
+                <RectangleEllipsisIcon class="shrink-0" strokeWidth={1.5} />
                 <div class="flex flex-col gap-1">
                     <span class="text-sm font-medium">Password</span>
                     <span class="text-sm text-muted-foreground">
@@ -870,7 +884,7 @@
 
     <!-- Google container -->
     <div class="flex flex-row items-start gap-4 border-border border-b p-4">
-        <img src="/google-icon.svg" alt="Google" class="size-5" />
+        <img src="/google-icon.svg" alt="Google" class="size-5 shrink-0" />
         <div class="flex flex-col gap-1">
             <span class="text-sm font-medium">Google</span>
             <span class="text-sm text-muted-foreground">
@@ -911,7 +925,7 @@
 
     <!-- Log-out -->
      <div class="flex flex-row items-start gap-4 p-4">
-        <DoorOpen strokeWidth={1.5}/>
+        <DoorOpen class="shrink-0" strokeWidth={1.5}/>
         <div class="flex flex-col gap-1">
             <span class="text-sm font-medium">Log out</span>
             <span class="text-sm text-muted-foreground">
@@ -921,7 +935,7 @@
 
         <Button
             type="button"
-            variant="destructive"
+            variant="outline"
             size="sm"
             onclick={() => logout()}
             class="ml-auto"
@@ -929,4 +943,42 @@
         Log out
         </Button>
      </div>
+</div>
+
+<h3 class="text-lg font-medium mb-4">Danger zone</h3>
+<div class="flex flex-col border border-red-100 dark:border-red-900 rounded-lg bg-card overflow-hidden">
+    <div class="flex flex-row items-start gap-4 p-4 bg-red-50/70 dark:bg-red-950/70">
+        <Trash2 class="text-red-700 dark:text-red-300 shrink-0" strokeWidth={1.5}/>
+        <div class="flex flex-col gap-1">
+            <span class="text-sm font-medium text-red-700 dark:text-red-300">Delete account</span>
+            <span class="text-sm text-muted-foreground text-red-700/80 dark:text-red-300/80">
+                This permanently deletes your account and all associated data.
+            </span>
+        </div>
+        <AlertDialog.Root bind:open={deleteDialogOpen}>
+            <AlertDialog.Trigger class="ml-auto">
+                <Button type="button" variant="destructive" size="sm" class="ml-auto">
+                    Delete account
+                </Button>
+            </AlertDialog.Trigger>
+            <AlertDialog.Content>
+                <AlertDialog.Header>
+                    <AlertDialog.Title>Are you absolutely sure?</AlertDialog.Title>
+                    <AlertDialog.Description>
+                        This action cannot be undone. This will permanently delete your account
+                        and remove your data from our servers.
+                    </AlertDialog.Description>
+                </AlertDialog.Header>
+                <AlertDialog.Footer>
+                    <AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
+                    <AlertDialog.Action onclick={handleDeleteAccount} disabled={deletingAccount}>
+                        {#if deletingAccount}
+                            <Spinner class="mr-2 h-4 w-4" />
+                        {/if}
+                        Yes, delete my account
+                    </AlertDialog.Action>
+                </AlertDialog.Footer>
+            </AlertDialog.Content>
+        </AlertDialog.Root>
+    </div>
 </div>

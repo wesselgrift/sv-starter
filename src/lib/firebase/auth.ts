@@ -10,6 +10,7 @@ import {
 	onAuthStateChanged,
 	linkWithPopup,
 	unlink,
+	deleteUser,
 	type User
 } from 'firebase/auth';
 import { auth } from './firebase';
@@ -223,6 +224,32 @@ export async function unlinkGoogleProvider() {
 			return { user: null, error: 'Please sign in again to unlink your Google account' };
 		}
 		return { user: null, error: error.message || 'Failed to unlink Google account' };
+	}
+}
+
+// Deletes the current user account and redirects to account-deleted page
+export async function deleteAccount() {
+	try {
+		const user = auth.currentUser;
+		if (!user) {
+			return { error: 'No user signed in' };
+		}
+
+		await deleteUser(user);
+		await fetch('/api/auth/logout', { method: 'POST' });
+		userProfile.set(null);
+
+		if (typeof window !== 'undefined') {
+			localStorage.removeItem('lastEmail');
+		}
+
+		goto('/account-deleted');
+		return { error: null };
+	} catch (error: any) {
+		if (error.code === 'auth/requires-recent-login') {
+			return { error: 'Please sign in again before deleting your account' };
+		}
+		return { error: error.message || 'Failed to delete account' };
 	}
 }
 
