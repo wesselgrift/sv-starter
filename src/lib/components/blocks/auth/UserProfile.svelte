@@ -8,7 +8,7 @@
 	import { Label } from '$lib/components/ui/label';
 	import { Alert, AlertDescription, AlertTitle } from '$lib/components/ui/alert';
 	import { Spinner } from '$lib/components/ui/spinner';
-	import * as AlertDialog from '$lib/components/ui/alert-dialog/index.js';
+	import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction} from '$lib/components/ui/alert-dialog';
 
 	// Svelte transitions
 	import { fly } from 'svelte/transition';
@@ -955,30 +955,30 @@
                 This permanently deletes your account and all associated data.
             </span>
         </div>
-        <AlertDialog.Root bind:open={deleteDialogOpen}>
-            <AlertDialog.Trigger class="ml-auto">
+        <AlertDialog bind:open={deleteDialogOpen}>
+            <AlertDialogTrigger class="ml-auto">
                 <Button type="button" variant="destructive" size="sm" class="ml-auto">
                     Delete account
                 </Button>
-            </AlertDialog.Trigger>
-            <AlertDialog.Content>
-                <AlertDialog.Header>
-                    <AlertDialog.Title>Are you absolutely sure?</AlertDialog.Title>
-                    <AlertDialog.Description>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
                         This action cannot be undone. This will permanently delete your account
                         and remove your data from our servers.
-                    </AlertDialog.Description>
-                </AlertDialog.Header>
-                <AlertDialog.Footer>
-                    <AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
-                    <AlertDialog.Action onclick={handleDeleteAccount} disabled={deletingAccount}>
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onclick={handleDeleteAccount} disabled={deletingAccount}>
                         {#if deletingAccount}
                             <Spinner class="mr-2 h-4 w-4" />
                         {/if}
                         Yes, delete my account
-                    </AlertDialog.Action>
-                </AlertDialog.Footer>
-            </AlertDialog.Content>
-        </AlertDialog.Root>
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
     </div>
 </div>
