@@ -4,7 +4,6 @@ import EmailPasswordSignup from "./EmailPasswordSignup.svelte";
 import PasswordIndicator from "./PasswordIndicator.svelte";
 import ResetPassword from "./ResetPassword.svelte";
 import SetNewPassword from "./SetNewPassword.svelte";
-import UserProfile from "./UserProfile.svelte";
 import VerifyEmailAction from "./VerifyEmailAction.svelte";
 import VerifyEmailChangeAction from "./VerifyEmailChangeAction.svelte";
 
@@ -15,7 +14,6 @@ export {
 	PasswordIndicator,
 	ResetPassword,
 	SetNewPassword,
-	UserProfile,
 	VerifyEmailAction,
 	VerifyEmailChangeAction,
 };
