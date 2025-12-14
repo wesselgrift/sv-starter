@@ -136,7 +136,8 @@ Routes protected in `src/hooks.server.ts`: verifies session cookie, stores claim
 
 - **shadcn-svelte**: Preconfigured via `components.json`, add components with `npx shadcn-svelte@latest add <component>`
 - **Theming**: CSS variables in `src/app.css`
-- **Auth blocks**: `src/lib/components/blocks/auth` (forms, validation, loading states)
+- **Auth blocks**: `src/lib/components/blocks/auth` (signup, signin, password reset, email verification forms)
+- **Profile blocks**: `src/lib/components/blocks/profile` (user profile management, account settings)
 - **Stores**: `src/lib/stores/userStore.ts` (`userProfile` + `loading`)
 - **Utils**: `bodyClassUpdater.ts` (body classes), `firebase-admin.ts` (Admin SDK init)
 
