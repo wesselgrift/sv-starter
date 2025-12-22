@@ -9,11 +9,10 @@
 		<!-- Hero heading and description -->
 		<div class="space-y-4">
 			<h1 class="text-4xl font-bold tracking-tight sm:text-6xl">
-				Welcome to SvelteKit Starter
+				Welcome to FireSvelte
 			</h1>
 			<p class="text-lg text-muted-foreground">
-				A modern boilerplate for building digital products with SvelteKit, Firebase auth and database, and
-				shadcn-svelte.
+				A modern boilerplate for building digital products with SvelteKit, Firebase auth and database, shadcn-svelte and Loops for emailing.
 			</p>
 		</div>
 
