@@ -1,4 +1,4 @@
-# SV Starter
+# FireSvelte
 
 An opinionated SvelteKit 2 + Svelte 5 starter with Firebase Authentication (JWT session cookies). Includes production-ready auth flows, shadcn-svelte UI, Tailwind CSS v4.
 
@@ -29,8 +29,8 @@ An opinionated SvelteKit 2 + Svelte 5 starter with Firebase Authentication (JWT 
 1. **Prerequisites**: Node.js 20+ and npm 10+
 2. **Clone & install**:
    ```sh
-   git clone <repo-url> sv-starter
-   cd sv-starter
+   git clone <repo-url> firesvelte
+   cd firesvelte
    npm install
    ```
 3. **Setup environment**:

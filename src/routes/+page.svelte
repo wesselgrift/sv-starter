@@ -29,7 +29,7 @@
 		<!-- GitHub repository link -->
 		<div class="pt-8">
 			<a
-				href="https://github.com/wesselgrift/sv-starter"
+				href="https://github.com/wesselgrift/firesvelte"
 				target="_blank"
 				rel="noopener noreferrer"
 				class="text-sm text-muted-foreground hover:text-foreground"
