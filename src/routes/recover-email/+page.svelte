@@ -1,13 +1,13 @@
 <script lang="ts">
 	/**
-	 * Email Verification Page
+	 * Email Recovery Page
 	 *
-	 * Simple page wrapper for the VerifyEmailAction component.
-	 * URL format: /verify-email?token=xxx
+	 * Simple page wrapper for the RecoverEmailAction component.
+	 * URL format: /recover-email?token=xxx
 	 */
 
 	// Component imports
-	import { VerifyEmailAction } from '$lib/components/blocks/auth';
+	import { RecoverEmailAction } from '$lib/components/blocks/auth';
 	import { Logo } from '$lib/components/ui/logo';
 </script>
 
@@ -22,8 +22,9 @@
 
 		<!-- Form and navigation container -->
 		<div class="flex flex-col gap-5">
-			<!-- Email verification component -->
-			<VerifyEmailAction />
+			<!-- Email recovery component -->
+			<RecoverEmailAction />
 		</div>
 	</div>
 </div>
+

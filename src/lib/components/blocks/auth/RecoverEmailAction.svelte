@@ -1,10 +1,9 @@
 <script lang="ts">
 	/**
-	 * Email Change Verification Component
+	 * Email Recovery Component
 	 *
-	 * Handles email change verification by calling the server endpoint with the token.
-	 * Uses custom tokens stored in Firestore instead of Firebase action codes.
-	 * The server also sends a notification email to the old email address.
+	 * Handles email recovery by calling the server endpoint with the token.
+	 * This allows users to revert an unwanted email change.
 	 */
 
 	// UI component imports
@@ -17,14 +16,12 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 
-	// Firebase imports for logout
-	import { logout } from '$lib/firebase/auth';
-
 	// Extract token from URL query parameters
 	const token = $derived(page.url.searchParams.get('token'));
 
 	// States
-	let verified = $state(false);
+	let recovered = $state(false);
+	let restoredEmail = $state('');
 	let error = $state('');
 	let loading = $state(true);
 	let tokenInvalid = $state(false);
@@ -34,15 +31,15 @@
 	const invalidTokenFromUrl = $derived(!token);
 	const invalidToken = $derived(invalidTokenFromUrl || tokenInvalid);
 
-	// Verify email change on mount
+	// Recover email on mount
 	$effect(() => {
-		if (!token || verified || error) return;
-		verifyEmailChange();
+		if (!token || recovered || error) return;
+		recoverEmail();
 	});
 
-	async function verifyEmailChange() {
+	async function recoverEmail() {
 		if (!token) {
-			error = 'Invalid or missing verification link. Please request a new email change.';
+			error = 'Invalid or missing recovery link.';
 			loading = false;
 			tokenInvalid = true;
 			return;
@@ -52,8 +49,8 @@
 		error = '';
 
 		try {
-			// Call server endpoint to verify and change email
-			const response = await fetch('/api/auth/verify-email-change', {
+			// Call server endpoint to recover email
+			const response = await fetch('/api/auth/recover-email', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ token })
@@ -62,19 +59,19 @@
 			const result = await response.json();
 
 			if (!response.ok) {
-				throw new Error(result.error || 'Failed to change email');
+				throw new Error(result.error || 'Failed to recover email');
 			}
 
-			verified = true;
+			recovered = true;
+			restoredEmail = result.restoredEmail || '';
 
-			// Email has been changed - user needs to sign in again with new email
-			// Sign them out and redirect to login after 3 seconds
+			// Redirect to login after 3 seconds so user can sign in with restored email
 			setTimeout(() => {
 				redirecting = true;
-				logout('/login');
+				goto('/login');
 			}, 3000);
 		} catch (err: unknown) {
-			const errorMessage = err instanceof Error ? err.message : 'Failed to change email';
+			const errorMessage = err instanceof Error ? err.message : 'Failed to recover email';
 
 			// Check for invalid/expired token errors
 			if (errorMessage.includes('Invalid') || errorMessage.includes('expired')) {
@@ -89,26 +86,26 @@
 
 	function handleContinue() {
 		redirecting = true;
-		logout('/login');
+		goto('/login');
 	}
 </script>
 
 {#if invalidToken}
 	<Alert variant="destructive">
 		<CircleAlert />
-		<AlertTitle>Email change failed</AlertTitle>
+		<AlertTitle>Email recovery failed</AlertTitle>
 		<AlertDescription
-			>{error ||
-				'Invalid or missing verification link. Please request a new email change.'}</AlertDescription
+			>{error || 'Invalid or missing recovery link. This link may have expired.'}</AlertDescription
 		>
 	</Alert>
 	<Button onclick={() => goto('/login')}> Go to login </Button>
-{:else if verified}
+{:else if recovered}
 	<Alert>
 		<CircleCheck />
-		<AlertTitle>Email changed successfully</AlertTitle>
+		<AlertTitle>Email restored successfully</AlertTitle>
 		<AlertDescription>
-			Your email has been updated. Please sign in with your new email address.
+			Your email has been restored{restoredEmail ? ` to ${restoredEmail}` : ''}. Please sign in
+			with your restored email address.
 		</AlertDescription>
 	</Alert>
 	<Button onclick={handleContinue} disabled={redirecting}>
@@ -122,14 +119,15 @@
 {:else if loading}
 	<Alert>
 		<LoaderCircle class="animate-spin" />
-		<AlertTitle>Verifying your email change</AlertTitle>
+		<AlertTitle>Recovering your email</AlertTitle>
 		<AlertDescription> This may take a few seconds. </AlertDescription>
 	</Alert>
 {:else if error}
 	<Alert variant="destructive">
 		<CircleAlert />
-		<AlertTitle>Email change failed</AlertTitle>
+		<AlertTitle>Email recovery failed</AlertTitle>
 		<AlertDescription>{error}</AlertDescription>
 	</Alert>
 	<Button onclick={() => goto('/login')}> Go to login </Button>
 {/if}
+

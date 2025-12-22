@@ -5,8 +5,6 @@ import {
 	signInWithPopup,
 	GoogleAuthProvider,
 	signOut,
-	sendEmailVerification,
-	sendPasswordResetEmail,
 	onAuthStateChanged,
 	linkWithPopup,
 	unlink,
@@ -21,25 +19,29 @@ import { userProfile } from '$lib/stores/userStore';
 // Google authentication provider instance
 const googleProvider = new GoogleAuthProvider();
 
-// Creates a new user account with email/password and sends verification email
+// Creates a new user account with email/password and sends verification email via Loops
 export async function register(email: string, password: string, firstName?: string, lastName?: string) {
 	try {
 		const userCredential = await createUserWithEmailAndPassword(auth, email, password);
 		const user = userCredential.user;
 
-		// Get the base URL for the custom action handler
-		const baseUrl =
-			typeof window !== 'undefined'
-				? window.location.origin
-				: import.meta.env.VITE_APP_URL || 'http://localhost:5173';
-		
-		const actionCodeSettings = {
-			url: `${baseUrl}/auth-action`,
-			handleCodeInApp: true
-		};
-
-		await sendEmailVerification(user, actionCodeSettings);
+		// Create server session first (needed for verification email API)
 		await ensureServerSession(user, false, firstName, lastName);
+
+		// Send verification email via Loops API
+		try {
+			const response = await fetch('/api/auth/send-verification', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ email })
+			});
+
+			if (!response.ok) {
+				console.error('Failed to send verification email via Loops');
+			}
+		} catch (emailError) {
+			console.error('Error sending verification email:', emailError);
+		}
 
 		return { user, error: null };
 	} catch (error: any) {
@@ -127,45 +129,43 @@ export async function ensureServerSession(user: User, forceRefresh = false, firs
 	}
 }
 
-// Sends email verification to the user
+// Sends email verification to the user via Loops API
 export async function sendVerificationEmail(user: User) {
 	try {
-		// Get the base URL for the custom action handler
-		const baseUrl =
-			typeof window !== 'undefined'
-				? window.location.origin
-				: import.meta.env.VITE_APP_URL || 'http://localhost:5173';
-		
-		const actionCodeSettings = {
-			url: `${baseUrl}/auth-action`,
-			handleCodeInApp: true
-		};
+		const response = await fetch('/api/auth/send-verification', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ email: user.email })
+		});
 
-		await sendEmailVerification(user, actionCodeSettings);
+		if (!response.ok) {
+			const data = await response.json();
+			return { error: data.error || 'Failed to send verification email' };
+		}
+
 		return { error: null };
 	} catch (error: any) {
-		return { error: error.message };
+		return { error: error.message || 'Failed to send verification email' };
 	}
 }
 
-// Sends password reset email to the provided email address
+// Sends password reset email to the provided email address via Loops API
 export async function resetPassword(email: string) {
 	try {
-		// Get the base URL for the custom action handler
-		const baseUrl =
-			typeof window !== 'undefined'
-				? window.location.origin
-				: import.meta.env.VITE_APP_URL || 'http://localhost:5173';
-		
-		const actionCodeSettings = {
-			url: `${baseUrl}/auth-action`,
-			handleCodeInApp: true
-		};
+		const response = await fetch('/api/auth/send-password-reset', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ email })
+		});
 
-		await sendPasswordResetEmail(auth, email, actionCodeSettings);
+		if (!response.ok) {
+			const data = await response.json();
+			return { error: data.error || 'Failed to send password reset email' };
+		}
+
 		return { error: null };
 	} catch (error: any) {
-		return { error: error.message };
+		return { error: error.message || 'Failed to send password reset email' };
 	}
 }
 
@@ -228,11 +228,20 @@ export async function unlinkGoogleProvider() {
 }
 
 // Deletes the current user account and redirects to account-deleted page
+// Sends a goodbye email before deletion
 export async function deleteAccount() {
 	try {
 		const user = auth.currentUser;
 		if (!user) {
 			return { error: 'No user signed in' };
+		}
+
+		// Send goodbye email before deletion (while we still have the user's data)
+		try {
+			await fetch('/api/auth/send-goodbye', { method: 'POST' });
+		} catch (emailError) {
+			// Don't block deletion if email fails
+			console.error('Failed to send goodbye email:', emailError);
 		}
 
 		await deleteUser(user);

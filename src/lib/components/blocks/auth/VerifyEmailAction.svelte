@@ -1,83 +1,93 @@
 <script lang="ts">
+	/**
+	 * Email Verification Component
+	 *
+	 * Handles two scenarios:
+	 * 1. No token - User just signed up, show "check your email" message
+	 * 2. With token - Process the email verification
+	 */
+
 	// UI component imports
 	import { Alert, AlertTitle, AlertDescription } from '$lib/components/ui/alert';
 	import { Button } from '$lib/components/ui/button';
 	import { Spinner } from '$lib/components/ui/spinner';
-	import { CircleCheck, CircleAlert, LoaderCircle } from '@lucide/svelte';
+	import { CircleCheck, CircleAlert, LoaderCircle, Mail } from '@lucide/svelte';
 
-	// Firebase imports
-	import { applyActionCode } from 'firebase/auth';
-	import { auth } from '$lib/firebase/firebase';
-	import { ensureServerSession } from '$lib/firebase/auth';
+	// SvelteKit imports
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 
-	// Extract oobCode from URL query parameters
-	const oobCode = $derived(page.url.searchParams.get('oobCode'));
+	// Firebase imports for session refresh
+	import { auth } from '$lib/firebase/firebase';
+	import { ensureServerSession } from '$lib/firebase/auth';
 
-	// States
+	// Extract token from URL query parameters
+	const token = $derived(page.url.searchParams.get('token'));
+
+	// If no token, user just signed up and needs to check email
+	const awaitingVerification = $derived(!token);
+
+	// States (only used when processing verification)
 	let verified = $state(false);
 	let error = $state('');
-	let loading = $state(true);
-	let codeInvalidatedByFirebase = $state(false);
+	let loading = $state(false);
+	let tokenInvalid = $state(false);
 	let redirecting = $state(false);
 
-	// Check if code is invalid from URL
-	const invalidCodeFromUrl = $derived(!oobCode);
-	const invalidCode = $derived(invalidCodeFromUrl || codeInvalidatedByFirebase);
+	// Combined invalid token check (only relevant when token exists)
+	const invalidToken = $derived(token && tokenInvalid);
 
-	// Verify email on mount
+	// Verify email when token is present
 	$effect(() => {
-		if (!oobCode || verified || error) return;
-
+		if (!token || verified || error || loading) return;
 		verifyEmail();
 	});
 
 	async function verifyEmail() {
-		if (!oobCode) {
-			error = 'Invalid or missing verification link. Please request a new verification email.';
-			loading = false;
-			codeInvalidatedByFirebase = true;
-			return;
-		}
+		if (!token) return;
 
 		loading = true;
 		error = '';
 
 		try {
-			await applyActionCode(auth, oobCode);
+			// Call server endpoint to verify email
+			const response = await fetch('/api/auth/verify-email', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ token })
+			});
+
+			const result = await response.json();
+
+			if (!response.ok) {
+				throw new Error(result.error || 'Failed to verify email');
+			}
+
 			verified = true;
-			
+
 			// Refresh the current user's token to get updated emailVerified status
-			// Note: User may not be logged in when verifying email, which is fine
 			const user = auth.currentUser;
 			if (user) {
 				await user.reload();
 				await ensureServerSession(user, true);
-				// Auto-redirect to app after 3 seconds if logged in
 				setTimeout(() => {
 					redirecting = true;
 					goto('/app');
 				}, 3000);
 			} else {
-				// If not logged in, redirect to login after verification
 				setTimeout(() => {
 					redirecting = true;
 					goto('/login');
 				}, 3000);
 			}
-		} catch (err: any) {
-			// Handle specific Firebase errors
-			if (err.code === 'auth/invalid-action-code' || err.code === 'auth/expired-action-code') {
-				error = 'This verification link has expired or is invalid. Please request a new verification email.';
-				codeInvalidatedByFirebase = true;
-			} else if (err.code === 'auth/user-disabled') {
-				error = 'This account has been disabled. Please contact support.';
-			} else if (err.code === 'auth/user-not-found') {
-				error = 'No account found for this verification link.';
-			} else {
-				error = err.message || 'Failed to verify email. Please try again.';
+		} catch (err: unknown) {
+			const errorMessage = err instanceof Error ? err.message : 'Failed to verify email';
+
+			if (errorMessage.includes('Invalid') || errorMessage.includes('expired')) {
+				tokenInvalid = true;
 			}
+
+			error = errorMessage;
 		} finally {
 			loading = false;
 		}
@@ -85,17 +95,58 @@
 
 	function handleContinue() {
 		redirecting = true;
-		// Redirect to app if logged in, otherwise to login
 		const user = auth.currentUser;
 		goto(user ? '/app' : '/login');
 	}
+
+	async function resendVerification() {
+		const user = auth.currentUser;
+		if (!user?.email) return;
+
+		loading = true;
+		try {
+			const response = await fetch('/api/auth/send-verification', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ email: user.email })
+			});
+
+			if (response.ok) {
+				// Show a brief success state
+				error = '';
+			}
+		} catch (err) {
+			console.error('Failed to resend verification:', err);
+		} finally {
+			loading = false;
+		}
+	}
 </script>
 
-{#if invalidCode}
+{#if awaitingVerification}
+	<!-- User just signed up - show "check your email" message -->
+	<Alert>
+		<Mail />
+		<AlertTitle>Check your email</AlertTitle>
+		<AlertDescription>
+			We've sent you a verification link. Please check your inbox and click the link to verify your
+			email address.
+		</AlertDescription>
+	</Alert>
+	<Button onclick={resendVerification} variant="outline" class="w-full" disabled={loading}>
+		{#if loading}
+			<Spinner class="size-5" />
+		{/if}
+		Resend verification email
+	</Button>
+{:else if invalidToken}
 	<Alert variant="destructive">
 		<CircleAlert />
 		<AlertTitle>Email verification failed</AlertTitle>
-		<AlertDescription>{error || 'Invalid or missing verification link. Please request a new verification email.'}</AlertDescription>
+		<AlertDescription
+			>{error ||
+				'Invalid or missing verification link. Please request a new verification email.'}</AlertDescription
+		>
 	</Alert>
 {:else if verified}
 	<Alert>
@@ -114,13 +165,11 @@
 		{/if}
 	</Button>
 {:else if loading}
-    <Alert>
-        <LoaderCircle class="animate-spin" />
-        <AlertTitle>Verifying your email</AlertTitle>
-        <AlertDescription>
-            This may take a few seconds.
-        </AlertDescription>
-    </Alert>
+	<Alert>
+		<LoaderCircle class="animate-spin" />
+		<AlertTitle>Verifying your email</AlertTitle>
+		<AlertDescription> This may take a few seconds. </AlertDescription>
+	</Alert>
 {:else if error}
 	<Alert variant="destructive">
 		<CircleAlert />

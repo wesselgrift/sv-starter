@@ -7,7 +7,6 @@
 	import {
 		EmailAuthProvider,
 		reauthenticateWithCredential,
-		verifyBeforeUpdateEmail,
 		type User
 	} from 'firebase/auth';
 
@@ -86,47 +85,55 @@
 				return;
 			}
 
-			try {
-				const credential = EmailAuthProvider.credential(emailPasswordEmail, currentPasswordForEmail);
-				await reauthenticateWithCredential(currentUser, credential);
-			} catch (err: any) {
-				if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password') {
-					onAlert('error', 'Incorrect password');
-					loading = false;
-					return;
-				}
-				throw err;
-			}
-
-			const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:5173';
-
-			const actionCodeSettings = {
-				url: `${baseUrl}/auth-action`,
-				handleCodeInApp: true
-			};
-
-			await verifyBeforeUpdateEmail(currentUser, newEmail.trim(), actionCodeSettings);
-
-			onAlert(
-				'success',
-				`Verification email sent to ${newEmail.trim()}. Please check your inbox and click the link to complete the email change.`
-			);
-			editingEmail = false;
-			currentPasswordForEmail = '';
-			loading = false;
+		try {
+			const credential = EmailAuthProvider.credential(emailPasswordEmail, currentPasswordForEmail);
+			await reauthenticateWithCredential(currentUser, credential);
 		} catch (err: any) {
-			if (err.code === 'auth/email-already-in-use') {
-				onAlert('error', 'This email is already in use by another account');
-			} else if (err.code === 'auth/invalid-email') {
-				onAlert('error', 'Invalid email format');
-			} else if (err.code === 'auth/requires-recent-login') {
-				onAlert('error', 'Please sign out and sign back in to change your email');
-			} else {
-				onAlert('error', err.message || 'An error occurred');
+			if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password') {
+				onAlert('error', 'Incorrect password');
+				loading = false;
+				return;
 			}
-			loading = false;
+			throw err;
 		}
+
+		// Send email change verification via Loops API
+		const response = await fetch('/api/auth/send-email-change', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				currentEmail: displayEmail,
+				newEmail: newEmail.trim()
+			})
+		});
+
+		if (!response.ok) {
+			const data = await response.json();
+			onAlert('error', data.error || 'Failed to send verification email');
+			loading = false;
+			return;
+		}
+
+		onAlert(
+			'success',
+			`Verification email sent to ${newEmail.trim()}. Please check your inbox and click the link to complete the email change.`
+		);
+		editingEmail = false;
+		currentPasswordForEmail = '';
+		loading = false;
+	} catch (err: any) {
+		if (err.code === 'auth/email-already-in-use') {
+			onAlert('error', 'This email is already in use by another account');
+		} else if (err.code === 'auth/invalid-email') {
+			onAlert('error', 'Invalid email format');
+		} else if (err.code === 'auth/requires-recent-login') {
+			onAlert('error', 'Please sign out and sign back in to change your email');
+		} else {
+			onAlert('error', err.message || 'An error occurred');
+		}
+		loading = false;
 	}
+}
 </script>
 
 <div class="flex flex-col border-border border-b p-4">

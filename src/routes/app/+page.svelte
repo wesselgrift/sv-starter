@@ -13,7 +13,7 @@
 </script>
 
 <!-- Main container displaying user profile information -->
-<h2 class="text-2xl font-semibold mb-2">Hey {$userProfile?.firstName}, <br> welcome to SV Starter 👋</h2>
+<h2 class="text-2xl font-semibold mb-2">Hey {$userProfile?.firstName}, <br> welcome to FireSvelte 👋</h2>
 <p class="text-muted-foreground text-sm mb-5">Welcome in the (empty) app. Let's build something!</p>
 
 <div class="flex flex-row gap-4">
