@@ -1,10 +1,17 @@
-// SvelteKit utilities and Firebase admin SDK
+/**
+ * Update Password API Endpoint
+ *
+ * Handles password updates for authenticated users.
+ * Sends a notification email after successful password change.
+ */
+
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { adminAuth } from '$lib/server/firebase-admin';
+import { adminAuth, adminDb } from '$lib/server/firebase-admin';
+import { sendPasswordChangedNotification } from '$lib/server/loops';
+import { env } from '$env/dynamic/private';
 
-// Handles POST requests for updating user password
-export const POST: RequestHandler = async ({ request, cookies }) => {
+export const POST: RequestHandler = async ({ request, cookies, url }) => {
 	try {
 		// Get session cookie
 		const sessionCookie = cookies.get('session');
@@ -28,15 +35,36 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 			password: newPassword
 		});
 
+		// Get user data for notification email
+		const userRecord = await adminAuth.getUser(uid);
+		let firstName = 'there';
+		try {
+			const userDoc = await adminDb.collection('users').doc(uid).get();
+			if (userDoc.exists) {
+				firstName = userDoc.data()?.firstName || 'there';
+			}
+		} catch (err) {
+			console.error('Error fetching user data for notification:', err);
+		}
+
+		// Send password changed notification (non-blocking)
+		const baseUrl = env.APP_URL || `${url.protocol}//${url.host}`;
+		if (userRecord.email) {
+			sendPasswordChangedNotification(userRecord.email, firstName, baseUrl).catch((err) => {
+				console.error('Failed to send password changed notification:', err);
+			});
+		}
+
 		return json({ success: true });
-	} catch (error: any) {
+	} catch (error: unknown) {
 		console.error('Update password error:', error);
-		
+
 		// Handle specific Firebase errors
-		if (error.code === 'auth/weak-password') {
+		const firebaseError = error as { code?: string; message?: string };
+		if (firebaseError.code === 'auth/weak-password') {
 			return json({ error: 'Password is too weak' }, { status: 400 });
 		}
 
-		return json({ error: error.message || 'Failed to update password' }, { status: 500 });
+		return json({ error: firebaseError.message || 'Failed to update password' }, { status: 500 });
 	}
 };

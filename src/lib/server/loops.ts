@@ -24,7 +24,11 @@ const TRANSACTIONAL_IDS = {
 	EMAIL_VERIFICATION: 'cmjbkdswi00qs0i06lq5il4od',
 	PASSWORD_RESET: 'cmjgy3rpu6brq0izd48l0nqk5',
 	EMAIL_CHANGE: 'cmjgzkuji0cdm0ixuzcnr08x5',
-	EMAIL_CHANGED_NOTIFICATION: 'cmjh0smww0jt10izg61lu2exo'
+	EMAIL_CHANGED_NOTIFICATION: 'cmjh0smww0jt10izg61lu2exo',
+	PASSWORD_CHANGED: 'cmjh4sux872380i1e8ncizggh',
+	WELCOME: 'cmjh594ab77wq0i0gqje2r6mq',
+	ACCOUNT_DELETED: 'cmjh5bozn6zn30izdazjplkkw',
+	PASSWORD_SET: 'cmjh5dpee73ms0i1eqeed1umy'
 } as const;
 
 /**
@@ -169,6 +173,128 @@ export async function sendEmailChangedNotification(
 		}
 		console.error('Error sending email changed notification:', error);
 		return { success: false, error: 'Failed to send email changed notification' };
+	}
+}
+
+/**
+ * Sends notification when user's password has been changed.
+ * Security alert so user knows if their password was changed without permission.
+ */
+export async function sendPasswordChangedNotification(
+	email: string,
+	firstName: string,
+	baseUrl: string
+): Promise<{ success: boolean; error?: string }> {
+	try {
+		const loops = getLoopsClient();
+		await loops.sendTransactionalEmail({
+			transactionalId: TRANSACTIONAL_IDS.PASSWORD_CHANGED,
+			email,
+			dataVariables: {
+				appName: APP_NAME,
+				firstName: firstName || 'there',
+				baseUrl
+			}
+		});
+		return { success: true };
+	} catch (error) {
+		if (error instanceof APIError) {
+			console.error('Loops API error (password changed):', error.json);
+			return { success: false, error: getErrorMessage(error, 'Failed to send password changed notification') };
+		}
+		console.error('Error sending password changed notification:', error);
+		return { success: false, error: 'Failed to send password changed notification' };
+	}
+}
+
+/**
+ * Sends welcome email after user verifies their email address.
+ * Good for onboarding and engagement.
+ */
+export async function sendWelcomeEmail(
+	email: string,
+	firstName: string,
+	baseUrl: string
+): Promise<{ success: boolean; error?: string }> {
+	try {
+		const loops = getLoopsClient();
+		await loops.sendTransactionalEmail({
+			transactionalId: TRANSACTIONAL_IDS.WELCOME,
+			email,
+			dataVariables: {
+				appName: APP_NAME,
+				firstName: firstName || 'there',
+				baseUrl
+			}
+		});
+		return { success: true };
+	} catch (error) {
+		if (error instanceof APIError) {
+			console.error('Loops API error (welcome):', error.json);
+			return { success: false, error: getErrorMessage(error, 'Failed to send welcome email') };
+		}
+		console.error('Error sending welcome email:', error);
+		return { success: false, error: 'Failed to send welcome email' };
+	}
+}
+
+/**
+ * Sends confirmation email when user deletes their account.
+ * Goodbye email confirming the account has been deleted.
+ */
+export async function sendAccountDeletedEmail(
+	email: string,
+	firstName: string
+): Promise<{ success: boolean; error?: string }> {
+	try {
+		const loops = getLoopsClient();
+		await loops.sendTransactionalEmail({
+			transactionalId: TRANSACTIONAL_IDS.ACCOUNT_DELETED,
+			email,
+			dataVariables: {
+				appName: APP_NAME,
+				firstName: firstName || 'there'
+			}
+		});
+		return { success: true };
+	} catch (error) {
+		if (error instanceof APIError) {
+			console.error('Loops API error (account deleted):', error.json);
+			return { success: false, error: getErrorMessage(error, 'Failed to send account deleted email') };
+		}
+		console.error('Error sending account deleted email:', error);
+		return { success: false, error: 'Failed to send account deleted email' };
+	}
+}
+
+/**
+ * Sends notification when a Google-only user sets their first password.
+ * Confirms they can now sign in with email/password in addition to Google.
+ */
+export async function sendPasswordSetNotification(
+	email: string,
+	firstName: string,
+	baseUrl: string
+): Promise<{ success: boolean; error?: string }> {
+	try {
+		const loops = getLoopsClient();
+		await loops.sendTransactionalEmail({
+			transactionalId: TRANSACTIONAL_IDS.PASSWORD_SET,
+			email,
+			dataVariables: {
+				appName: APP_NAME,
+				firstName: firstName || 'there',
+				baseUrl
+			}
+		});
+		return { success: true };
+	} catch (error) {
+		if (error instanceof APIError) {
+			console.error('Loops API error (password set):', error.json);
+			return { success: false, error: getErrorMessage(error, 'Failed to send password set notification') };
+		}
+		console.error('Error sending password set notification:', error);
+		return { success: false, error: 'Failed to send password set notification' };
 	}
 }
 

@@ -228,11 +228,20 @@ export async function unlinkGoogleProvider() {
 }
 
 // Deletes the current user account and redirects to account-deleted page
+// Sends a goodbye email before deletion
 export async function deleteAccount() {
 	try {
 		const user = auth.currentUser;
 		if (!user) {
 			return { error: 'No user signed in' };
+		}
+
+		// Send goodbye email before deletion (while we still have the user's data)
+		try {
+			await fetch('/api/auth/send-goodbye', { method: 'POST' });
+		} catch (emailError) {
+			// Don't block deletion if email fails
+			console.error('Failed to send goodbye email:', emailError);
 		}
 
 		await deleteUser(user);
