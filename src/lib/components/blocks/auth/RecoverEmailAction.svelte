@@ -1,9 +1,9 @@
 <script lang="ts">
 	/**
-	 * Email Verification Component
+	 * Email Recovery Component
 	 *
-	 * Handles email verification by calling the server endpoint with the token.
-	 * Uses custom tokens stored in Firestore instead of Firebase action codes.
+	 * Handles email recovery by calling the server endpoint with the token.
+	 * This allows users to revert an unwanted email change.
 	 */
 
 	// UI component imports
@@ -16,15 +16,12 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 
-	// Firebase imports for session refresh
-	import { auth } from '$lib/firebase/firebase';
-	import { ensureServerSession } from '$lib/firebase/auth';
-
 	// Extract token from URL query parameters
 	const token = $derived(page.url.searchParams.get('token'));
 
 	// States
-	let verified = $state(false);
+	let recovered = $state(false);
+	let restoredEmail = $state('');
 	let error = $state('');
 	let loading = $state(true);
 	let tokenInvalid = $state(false);
@@ -34,15 +31,15 @@
 	const invalidTokenFromUrl = $derived(!token);
 	const invalidToken = $derived(invalidTokenFromUrl || tokenInvalid);
 
-	// Verify email on mount
+	// Recover email on mount
 	$effect(() => {
-		if (!token || verified || error) return;
-		verifyEmail();
+		if (!token || recovered || error) return;
+		recoverEmail();
 	});
 
-	async function verifyEmail() {
+	async function recoverEmail() {
 		if (!token) {
-			error = 'Invalid or missing verification link. Please request a new verification email.';
+			error = 'Invalid or missing recovery link.';
 			loading = false;
 			tokenInvalid = true;
 			return;
@@ -52,8 +49,8 @@
 		error = '';
 
 		try {
-			// Call server endpoint to verify email
-			const response = await fetch('/api/auth/verify-email', {
+			// Call server endpoint to recover email
+			const response = await fetch('/api/auth/recover-email', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({ token })
@@ -62,31 +59,19 @@
 			const result = await response.json();
 
 			if (!response.ok) {
-				throw new Error(result.error || 'Failed to verify email');
+				throw new Error(result.error || 'Failed to recover email');
 			}
 
-			verified = true;
+			recovered = true;
+			restoredEmail = result.restoredEmail || '';
 
-			// Refresh the current user's token to get updated emailVerified status
-			// Note: User may not be logged in when verifying email, which is fine
-			const user = auth.currentUser;
-			if (user) {
-				await user.reload();
-				await ensureServerSession(user, true);
-				// Auto-redirect to app after 3 seconds if logged in
-				setTimeout(() => {
-					redirecting = true;
-					goto('/app');
-				}, 3000);
-			} else {
-				// If not logged in, redirect to login after verification
-				setTimeout(() => {
-					redirecting = true;
-					goto('/login');
-				}, 3000);
-			}
+			// Redirect to login after 3 seconds so user can sign in with restored email
+			setTimeout(() => {
+				redirecting = true;
+				goto('/login');
+			}, 3000);
 		} catch (err: unknown) {
-			const errorMessage = err instanceof Error ? err.message : 'Failed to verify email';
+			const errorMessage = err instanceof Error ? err.message : 'Failed to recover email';
 
 			// Check for invalid/expired token errors
 			if (errorMessage.includes('Invalid') || errorMessage.includes('expired')) {
@@ -101,47 +86,48 @@
 
 	function handleContinue() {
 		redirecting = true;
-		// Redirect to app if logged in, otherwise to login
-		const user = auth.currentUser;
-		goto(user ? '/app' : '/login');
+		goto('/login');
 	}
 </script>
 
 {#if invalidToken}
 	<Alert variant="destructive">
 		<CircleAlert />
-		<AlertTitle>Email verification failed</AlertTitle>
+		<AlertTitle>Email recovery failed</AlertTitle>
 		<AlertDescription
-			>{error ||
-				'Invalid or missing verification link. Please request a new verification email.'}</AlertDescription
+			>{error || 'Invalid or missing recovery link. This link may have expired.'}</AlertDescription
 		>
 	</Alert>
-{:else if verified}
+	<Button onclick={() => goto('/login')}> Go to login </Button>
+{:else if recovered}
 	<Alert>
 		<CircleCheck />
-		<AlertTitle>Email verified successfully</AlertTitle>
+		<AlertTitle>Email restored successfully</AlertTitle>
 		<AlertDescription>
-			Your email has been verified. You will be redirected to the app in a moment.
+			Your email has been restored{restoredEmail ? ` to ${restoredEmail}` : ''}. Please sign in
+			with your restored email address.
 		</AlertDescription>
 	</Alert>
 	<Button onclick={handleContinue} disabled={redirecting}>
 		{#if redirecting}
 			<Spinner class="size-5" />
-			Redirecting...
+			Redirecting to login...
 		{:else}
-			Go to app
+			Go to login
 		{/if}
 	</Button>
 {:else if loading}
 	<Alert>
 		<LoaderCircle class="animate-spin" />
-		<AlertTitle>Verifying your email</AlertTitle>
+		<AlertTitle>Recovering your email</AlertTitle>
 		<AlertDescription> This may take a few seconds. </AlertDescription>
 	</Alert>
 {:else if error}
 	<Alert variant="destructive">
 		<CircleAlert />
-		<AlertTitle>Email verification failed</AlertTitle>
+		<AlertTitle>Email recovery failed</AlertTitle>
 		<AlertDescription>{error}</AlertDescription>
 	</Alert>
+	<Button onclick={() => goto('/login')}> Go to login </Button>
 {/if}
+

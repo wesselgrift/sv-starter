@@ -2,6 +2,9 @@
 import { LoopsClient, APIError } from 'loops';
 import { env } from '$env/dynamic/private';
 
+// App name for email templates
+const APP_NAME = env.APP_NAME || 'Your App';
+
 // Initialize Loops client lazily to handle missing env var during build
 let loopsClient: LoopsClient | null = null;
 
@@ -19,8 +22,9 @@ function getLoopsClient(): LoopsClient {
 // Update these with your actual transactional IDs after creating templates
 const TRANSACTIONAL_IDS = {
 	EMAIL_VERIFICATION: 'cmjbkdswi00qs0i06lq5il4od',
-	PASSWORD_RESET: 'your_password_reset_transactional_id',
-	EMAIL_CHANGE: 'your_email_change_transactional_id'
+	PASSWORD_RESET: 'cmjgy3rpu6brq0izd48l0nqk5',
+	EMAIL_CHANGE: 'cmjgzkuji0cdm0ixuzcnr08x5',
+	EMAIL_CHANGED_NOTIFICATION: 'cmjh0smww0jt10izg61lu2exo'
 } as const;
 
 /**
@@ -49,6 +53,7 @@ export async function sendVerificationEmail(
 			transactionalId: TRANSACTIONAL_IDS.EMAIL_VERIFICATION,
 			email,
 			dataVariables: {
+				appName: APP_NAME,
 				firstName: firstName || 'there',
 				verificationLink,
 				baseUrl
@@ -80,6 +85,7 @@ export async function sendPasswordResetEmail(
 			transactionalId: TRANSACTIONAL_IDS.PASSWORD_RESET,
 			email,
 			dataVariables: {
+				appName: APP_NAME,
 				firstName: firstName || 'there',
 				resetLink,
 				baseUrl
@@ -112,6 +118,7 @@ export async function sendEmailChangeVerificationEmail(
 			transactionalId: TRANSACTIONAL_IDS.EMAIL_CHANGE,
 			email,
 			dataVariables: {
+				appName: APP_NAME,
 				firstName: firstName || 'there',
 				verificationLink,
 				newEmail,
@@ -126,6 +133,42 @@ export async function sendEmailChangeVerificationEmail(
 		}
 		console.error('Error sending email change verification:', error);
 		return { success: false, error: 'Failed to send email change verification' };
+	}
+}
+
+/**
+ * Sends notification to old email address when email has been changed.
+ * This is a security notification so the user knows their email was changed.
+ * Includes a recovery link to revert the change if it was unauthorized.
+ */
+export async function sendEmailChangedNotification(
+	oldEmail: string,
+	firstName: string,
+	newEmail: string,
+	recoveryLink: string,
+	baseUrl: string
+): Promise<{ success: boolean; error?: string }> {
+	try {
+		const loops = getLoopsClient();
+		await loops.sendTransactionalEmail({
+			transactionalId: TRANSACTIONAL_IDS.EMAIL_CHANGED_NOTIFICATION,
+			email: oldEmail,
+			dataVariables: {
+				appName: APP_NAME,
+				firstName: firstName || 'there',
+				newEmail,
+				recoveryLink,
+				baseUrl
+			}
+		});
+		return { success: true };
+	} catch (error) {
+		if (error instanceof APIError) {
+			console.error('Loops API error (email changed notification):', error.json);
+			return { success: false, error: getErrorMessage(error, 'Failed to send email changed notification') };
+		}
+		console.error('Error sending email changed notification:', error);
+		return { success: false, error: 'Failed to send email changed notification' };
 	}
 }
 
