@@ -6,6 +6,7 @@ An opinionated SvelteKit 2 + Svelte 5 starter with Firebase Authentication (JWT 
 
 - Email/password + Google auth (signup, login, reset, verification, email change)
 - Account management (update name, email, password, set password for Google users, disconnect Google, delete account)
+- Transactional emails via [Loops](https://loops.so) (welcome, verification, password reset, notifications)
 - Secure session cookies via `/api/auth/login` & `/api/auth/logout`, protected routes in `src/hooks.server.ts`
 - Firestore `users/{uid}` profiles hydrating `userProfile` store
 - shadcn-svelte components in `lib/components/ui` (add more via CLI)
@@ -19,6 +20,7 @@ An opinionated SvelteKit 2 + Svelte 5 starter with Firebase Authentication (JWT 
 | SvelteKit | `@sveltejs/kit@^2.47.1`, Svelte 5 runes |
 | Styling | Tailwind CSS v4, `tw-animate-css`, shadcn-svelte |
 | Auth & Data | Firebase Web SDK (client) + Admin & Firestore (server) |
+| Email | [Loops](https://loops.so) transactional emails (easily swappable) |
 | State | Svelte stores (`src/lib/stores/userStore.ts`) |
 | Tooling | Vite 7, TypeScript 5.9, ESLint 9, Prettier 3, `svelte-package` |
 
@@ -44,6 +46,8 @@ Client (`VITE_` prefix) and server secrets:
 
 | Variable | Description |
 | -------- | ----------- |
+| `APP_NAME` | Your app name (used in email templates) |
+| `APP_URL` | Production URL (leave empty for dev auto-detection) |
 | `VITE_FIREBASE_API_KEY` | Web API key |
 | `VITE_FIREBASE_AUTH_DOMAIN` | `<project>.firebaseapp.com` |
 | `VITE_FIREBASE_PROJECT_ID` | Firebase project ID |
@@ -53,6 +57,7 @@ Client (`VITE_` prefix) and server secrets:
 | `FIREBASE_PROJECT_ID` | Same as above (Admin SDK) |
 | `FIREBASE_CLIENT_EMAIL` | Service account email |
 | `FIREBASE_PRIVATE_KEY` | Multi-line private key (`\n` preserved) |
+| `LOOPS_API_KEY` | Loops API key for transactional emails |
 
 Never commit `.env`. Use secrets in CI/CD.
 
@@ -82,6 +87,58 @@ Never commit `.env`. Use secrets in CI/CD.
      }
    }
    ```
+
+## Email service (Loops)
+
+Transactional emails are handled via [Loops](https://loops.so). All email logic is centralized in `src/lib/server/loops.ts`.
+
+### Emails sent
+
+| Email | Trigger |
+| ----- | ------- |
+| Email verification | User signs up with email/password |
+| Welcome | User verifies their email |
+| Password reset | User requests password reset |
+| Password changed | User resets or changes password |
+| Password set | Google user sets a password |
+| Email change verification | User requests email change |
+| Email changed notification | Email change is completed (sent to old email) |
+| Account deleted | User deletes their account |
+
+### Setup
+
+1. Create a [Loops](https://loops.so) account
+2. Create transactional email templates for each email type above
+3. Copy the transactional IDs and update `TRANSACTIONAL_IDS` in `src/lib/server/loops.ts`
+4. Add your Loops API key to `.env` as `LOOPS_API_KEY`
+
+### Template variables
+
+All templates receive these data variables:
+- `appName` - Your app name (from `APP_NAME` env var)
+- `firstName` - User's first name
+- `baseUrl` - Your app's base URL
+
+Additional variables per template:
+- **Verification/Reset emails**: `verificationLink` or `resetLink`
+- **Email change**: `newEmail`, `verificationLink`
+- **Email changed notification**: `newEmail`, `recoveryLink`
+
+### Switching email providers
+
+The email service is designed to be easily swappable. All functions follow the same interface:
+
+```typescript
+Promise<{ success: boolean; error?: string }>
+```
+
+To switch to another provider (e.g., Resend, SendGrid, Postmark):
+
+1. Replace the SDK import and client initialization in `src/lib/server/loops.ts`
+2. Update the function implementations to use the new provider's API
+3. Update template IDs or switch to inline HTML templates
+
+No changes needed to the API endpoints—they just call the exported functions.
 
 ## Scripts
 
@@ -121,6 +178,14 @@ Export modules from `src/lib/index.ts` before `prepack` if publishing.
 | `/api/auth/update-profile` | Update user profile (name) |
 | `/api/auth/update-email` | Update user email address |
 | `/api/auth/update-password` | Update user password |
+| `/api/auth/send-verification` | Send email verification link |
+| `/api/auth/verify-email` | Verify email from link |
+| `/api/auth/send-password-reset` | Send password reset link |
+| `/api/auth/reset-password` | Reset password from link |
+| `/api/auth/send-email-change` | Send email change verification |
+| `/api/auth/verify-email-change` | Verify email change from link |
+| `/api/auth/recover-email` | Recover email (revert unauthorized change) |
+| `/api/auth/send-goodbye` | Send account deleted confirmation email |
 
 Routes protected in `src/hooks.server.ts`: verifies session cookie, stores claims on `event.locals.user`, redirects unverified/unauthenticated users.
 
@@ -140,6 +205,7 @@ Routes protected in `src/hooks.server.ts`: verifies session cookie, stores claim
 - **Profile blocks**: `src/lib/components/blocks/profile` (user profile management, account settings)
 - **Stores**: `src/lib/stores/userStore.ts` (`userProfile` + `loading`)
 - **Utils**: `bodyClassUpdater.ts` (body classes), `firebase-admin.ts` (Admin SDK init)
+- **Email**: `src/lib/server/loops.ts` (transactional email functions)
 
 ## Extending
 
