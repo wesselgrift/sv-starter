@@ -12,7 +12,7 @@
 				Welcome to FireSvelte
 			</h1>
 			<p class="text-lg text-muted-foreground">
-				A modern boilerplate for building digital products with SvelteKit, Firebase auth and database, shadcn-svelte and Loops for emailing.
+				A modern boilerplate for building digital products with SvelteKit, Firebase auth and Firestore database, shadcn-svelte UI, and Loops for emailing.
 			</p>
 		</div>
 
