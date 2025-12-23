@@ -18,4 +18,3 @@ export const userState = $state<{
 	loading: true,
 	profile: null
 });
-

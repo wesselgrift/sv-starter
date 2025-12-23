@@ -43,8 +43,6 @@
 			}
 		} catch (err: any) {
 			error = err.message || 'An error occurred';
-		} finally {
-			loading = false;
 		}
 	}
 </script>
